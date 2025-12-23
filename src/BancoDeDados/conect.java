@@ -1,0 +1,55 @@
+
+package BancoDeDados;
+
+//Imports necessario para funcionalidade da classe
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class conect {
+	
+
+//Atributo necessarios 
+		private String driver = "org.postgresql.Driver";
+		private String user = "postgres";
+		private String senha = "GodHypnos.66";
+		private String url = "jdbc:postgresql://localhost:5432/listasql";
+		private Connection con = null;
+
+		public conect() {
+			try
+			{
+				Class.forName(driver);
+				//Connection con = null;
+				this.con = (Connection) DriverManager.getConnection(url, user, senha);
+				System.out.println("Conexão realizada com sucesso.");
+			}
+			catch (ClassNotFoundException ex)
+			{
+				System.err.print(ex.getMessage());
+			} 
+			catch (SQLException e)
+			{
+				System.err.print(e.getMessage());
+			}
+		}
+		
+		public Connection getConexao(){
+			return this.con;
+		}
+
+		public void fecharConexao(){
+			try{
+				
+				if(con != null)
+					con.close();
+			}catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+
+
+
+
