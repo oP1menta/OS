@@ -2,7 +2,7 @@ package Classe;
 import java.util.Scanner;
 import Exception.InvalidArgumentException;
 
-public abstract class Pessoa extends InvalidArgumentException{
+public class Pessoa{
 	protected String nome,telefone,email;
 	protected String cpf;
 	protected int length;
@@ -21,8 +21,8 @@ public abstract class Pessoa extends InvalidArgumentException{
 		}catch (InvalidArgumentException e) {
 			e.printStackTrace();
 		}
-		
 	}
+		
 	
 	
 	public void setNome (String nome) throws InvalidArgumentException{

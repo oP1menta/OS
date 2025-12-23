@@ -8,6 +8,8 @@ public class PessoaJuridica extends Pessoa {
 			String email,
 			String cpf) {
 		
+		super(nome,telefone,email,cpf);
+		
 	}
 	
 
