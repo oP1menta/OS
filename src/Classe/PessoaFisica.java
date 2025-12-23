@@ -1,5 +1,7 @@
 package Classe;
 
+import Exception.InvalidArgumentException;
+
 public class PessoaFisica extends Pessoa {
 	public PessoaFisica (
 			String nome,
@@ -7,26 +9,10 @@ public class PessoaFisica extends Pessoa {
 			String email,
 			String cpf) {
 		
-		try {
-			setNome(nome);
-		}catch();
-		
-		setTelefone(telefone);
-		
-		setEmail(email);
-		
-		setCpf(cpf);
-	}
+		super(nome,telefone,email,cpf);
 	
-	public void setNome (String nome) {
-		this.nome=nome;
-	}
-	public void setTelefone(String telefone) {
-		this.telefone=telefone;
-	}
-	public void setEmail(String email) {
-		this.email=email;
-	}
+	
 	
 
+	}
 }
