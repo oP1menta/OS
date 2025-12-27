@@ -2,22 +2,24 @@ package Classe;
 import java.util.Scanner;
 import Exception.InvalidArgumentException;
 
-public class Pessoa{
+public class Cliente{
 	protected String nome,telefone,email;
-	protected String cpf;
+	protected String documento;
 	protected int length;
 	Scanner sc=new Scanner(System.in);
 	
-	public Pessoa(String nome,String telefone,String email,String cpf) {
+	public Cliente(String nome,String telefone,String email,String documento) {
 		try{
 			setNome(nome);
 		}catch (InvalidArgumentException e) {
 			e.printStackTrace();
 		}
+		
 		setTelefone(telefone);
 		setEmail(email);
+		
 		try{
-			setCpf(cpf);
+			setCpf(documento);
 		}catch (InvalidArgumentException e) {
 			e.printStackTrace();
 		}
@@ -26,10 +28,11 @@ public class Pessoa{
 	
 	
 	public void setNome (String nome) throws InvalidArgumentException{
-		if (nome!="") {
+		if (nome!=null && !nome.isEmpty()) {
 			this.nome=nome;
+		}else {
+			throw new InvalidArgumentException("Campo nome vazio");
 		}
-		throw new InvalidArgumentException("Campo nome vazio");
 	}
 	public void setTelefone(String telefone) {
 		this.telefone=telefone;
@@ -37,11 +40,14 @@ public class Pessoa{
 	public void setEmail(String email) {
 		this.email=email;
 	}
-	public void setCpf(String cpf) throws InvalidArgumentException {
-		if(cpf!="") {
-			this.cpf = cpf;
-			length = cpf.length();	
-		}throw new InvalidArgumentException("Campo Cpf vazio");
+	public void setCpf(String documento) throws InvalidArgumentException {
+		if(documento!=null && !documento.isEmpty()) {
+			this.documento = documento;
+			length = documento.length();	
+		}
+		else {
+			throw new InvalidArgumentException("Campo Documentos vazio");
+		}
 	}
 	
 	
@@ -49,7 +55,7 @@ public class Pessoa{
 	public String getNome() {return nome;}
 	public String getTelefone() {return telefone;}
 	public String getEmail() {return email;}
-	public String getCpf() {return cpf;}
+	public String getDocumento() {return documento;}
 	public int getLength() {return length;}
 	
 }
