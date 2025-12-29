@@ -55,7 +55,19 @@ public class Cliente{
 	public String getNome() {return nome;}
 	public String getTelefone() {return telefone;}
 	public String getEmail() {return email;}
-	public String getDocumento() {return documento;}
 	public int getLength() {return length;}
 	
+	//Override
+	public String toString() {
+		return "\nNome: "+ nome +"\n"
+				+ "Telefone: " + telefone
+				+ "\nEmail: " + email 
+				+"\nDocumento: "+ documento+"\n";
+	
+	}
+	
+	public String getDocumento() {return documento;}
+	
 }
+	
+
