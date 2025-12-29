@@ -1,5 +1,6 @@
 package Classe;
 
+
 public class ClienteJuridica extends Cliente {
 	
 	public ClienteJuridica(
@@ -11,12 +12,9 @@ public class ClienteJuridica extends Cliente {
 		super(nome,telefone,email,cnpj);
 		
 	}
-	
-	public void toText () {
-		System.out.println(nome+telefone+email+documento);
-		System.out.println("Juridico");
-		
-		
+	@Override
+	public String toString () {
+			return"\nPessoa Juridica-----------------"+super.toString()+"--------------------------------";		
 	}
 
 }

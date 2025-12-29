@@ -1,7 +1,5 @@
 package Classe;
 
-import Exception.InvalidArgumentException;
-
 public class ClienteFisica extends Cliente {
 	public ClienteFisica (
 			String nome,
@@ -12,10 +10,10 @@ public class ClienteFisica extends Cliente {
 		super(nome,telefone,email,cpf);
 	}
 	
-	public void toText () {
-		System.out.println(nome+telefone+email+documento);
-		System.out.println("Fisica");
-		
+	@Override
+	public String toString() {
+		return  "Pessoa Fisica-------------------"+super.toString()+"--------------------------------";
 	}
+	
 
 }
