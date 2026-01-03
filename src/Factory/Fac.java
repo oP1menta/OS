@@ -1,8 +1,10 @@
 package Factory;
+import java.util.ArrayList;
 import Classe.*;
 import Exception.InvalidArgumentException;
 
 public class Fac {
+	private ArrayList<Cliente> clientes = new ArrayList<>();
 	private static Fac InstanciaUnica;
 	private Fac() {}
 	public static Fac getInstancia() {
@@ -14,19 +16,32 @@ public class Fac {
 
 	
 	
-	public Cliente getCliente(String nome,String telefone,String email,String documento) throws InvalidArgumentException {
-		
-		documento = documento.replaceAll("\\D", "");
-		 
-		 
-		if(documento.length() == 11) {
-			System.out.println("eu sou fisica");
-			return new ClienteFisica(nome, telefone, email, documento);
+	public Cliente criarCliente(
+		    String nome,
+		    String telefone,
+		    String email,
+		    String documento
+		) throws InvalidArgumentException {
+
+		    documento = documento.replaceAll("\\D", "");
+
+		    Cliente c;
+
+		    if (documento.length() == 11) {
+		        c = new ClienteFisica(nome, telefone, email, documento);
+		    } 
+		    else if (documento.length() == 14) {
+		        c = new ClienteJuridica(nome, telefone, email, documento);
+		    } 
+		    else {
+		        throw new InvalidArgumentException("Documento invalido");
+		    }
+
+		    clientes.add(c);
+		    return c;
 		}
-		else if(documento.length()==14) {
-			System.out.println("eu sou juridica");
-			return new ClienteJuridica(nome, telefone, email, documento);
-		}
-		throw new InvalidArgumentException("Documento invalido");
-	}	
+	public ArrayList<Cliente> getCliente() {
+    return clientes;
+	}
+	
 }
