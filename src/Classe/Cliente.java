@@ -1,12 +1,12 @@
 package Classe;
-import java.util.Scanner;
+import java.util.ArrayList;
 import Exception.InvalidArgumentException;
 
 public class Cliente{
 	protected String nome,telefone,email;
 	protected String documento;
 	protected int length;
-	Scanner sc=new Scanner(System.in);
+	protected ArrayList<Equipamento> equipamentos;
 	
 	public Cliente(String nome,String telefone,String email,String documento) {
 		try{
@@ -25,7 +25,9 @@ public class Cliente{
 		}
 	}
 		
-	
+	public void addEquipamento(Equipamento e) {
+		equipamentos.add(e);
+	}
 	
 	public void setNome (String nome) throws InvalidArgumentException{
 		if (nome!=null && !nome.isEmpty()) {
@@ -52,6 +54,10 @@ public class Cliente{
 	
 	
 	
+	public void getEquipamentos() {
+		
+		
+	}
 	public String getNome() {return nome;}
 	public String getTelefone() {return telefone;}
 	public String getEmail() {return email;}
