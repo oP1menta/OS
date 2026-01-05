@@ -5,8 +5,15 @@ public class Equipamento {
 	private int id = 0;
 	private String nome;
 	private String modelo;
+	private String FK_Cliente;
 
-	public Equipamento(int id,String nome,String modelo) {
+	public Equipamento(int id,String nome,String modelo,String FK_Cliente) {
+		
+		try {
+			setFK(FK_Cliente);
+		}catch (InvalidArgumentException e) {
+			e.printStackTrace();
+		}
 		
 		try {
 			setId(id);
@@ -16,7 +23,7 @@ public class Equipamento {
 		setNome(nome);
 		try {
 			setModelo(modelo);
-		} catch (InvalidArgumentException e) {1
+		} catch (InvalidArgumentException e) {
 			e.printStackTrace();
 		}
 		
@@ -37,12 +44,23 @@ public class Equipamento {
 		if (modelo != null && !modelo.isEmpty()) {			
 			this.modelo = modelo;
 		}
-		else throw new InvalidArgumentException("Modelo vazio");
+		else {
+			throw new InvalidArgumentException("Modelo vazio");
+		}
+	}
+	
+	public void setFK(String FK_Cliente) throws InvalidArgumentException{
+		if (FK_Cliente != null && !FK_Cliente.isEmpty()) {
+			this.FK_Cliente = FK_Cliente;
+		}
+		else {
+			throw new InvalidArgumentException("Foreing Key vazia");
+		}
 	}
 
 	public int getId() {return id; }
 	public String getNome() {return nome;}
 	public String getModelo() {return modelo;}
-	
+	public String getFK() {return FK_Cliente;}
 	
 }
