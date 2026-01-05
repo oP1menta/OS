@@ -44,4 +44,10 @@ public class Fac {
     return clientes;
 	}
 	
+	
+	public Equipamento criarEquipamento (int id, String nome,String modelo,String FK_Cliente) {
+		return new Equipamento(id,nome,modelo,FK_Cliente);
+	}
+	
+	
 }

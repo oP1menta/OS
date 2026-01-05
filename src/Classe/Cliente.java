@@ -8,13 +8,17 @@ public class Cliente{
 	protected int length;
 	protected ArrayList<Equipamento> equipamentos;
 	
-	public Cliente(String nome,String telefone,String email,String documento) {
+	public Cliente(
+			String nome,
+			String telefone,
+			String email,
+			String documento) {
 		try{
 			setNome(nome);
 		}catch (InvalidArgumentException e) {
 			e.printStackTrace();
 		}
-		
+		this.equipamentos = new ArrayList<>();
 		setTelefone(telefone);
 		setEmail(email);
 		
@@ -54,10 +58,17 @@ public class Cliente{
 	
 	
 	
-	public void getEquipamentos() {
-		
-		
+	public void getEquipamentos() throws InvalidArgumentException {
+		if (equipamentos.isEmpty()) {
+			throw new InvalidArgumentException("Sem equipamentos");
+		}
+		else {
+			for(Equipamento e : equipamentos) {
+				System.out.println("- "+e.getNome());
+			}
+		}
 	}
+	
 	public String getNome() {return nome;}
 	public String getTelefone() {return telefone;}
 	public String getEmail() {return email;}
