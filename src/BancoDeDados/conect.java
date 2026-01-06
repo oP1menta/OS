@@ -13,7 +13,7 @@ public class conect {
 		private String driver = "org.postgresql.Driver";
 		private String user = "postgres";
 		private String senha = "GodHypnos.66";
-		private String url = "jdbc:postgresql://localhost:5432/listasql";
+		private String url = "jdbc:postgresql://localhost:5432/projetointegrador";
 		private Connection con = null;
 
 		public conect() {
