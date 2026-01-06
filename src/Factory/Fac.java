@@ -5,6 +5,8 @@ import Exception.InvalidArgumentException;
 
 public class Fac {
 	private ArrayList<Cliente> clientes = new ArrayList<>();
+	private ArrayList<Equipamento> equipamentos = new ArrayList<>();
+	
 	private static Fac InstanciaUnica;
 	private Fac() {}
 	public static Fac getInstancia() {
@@ -44,10 +46,15 @@ public class Fac {
     return clientes;
 	}
 	
+	public ArrayList<Equipamento> getEquipamento() {
+	    return equipamentos;
+	    }
 	
-	public Equipamento criarEquipamento (int id, String nome,String modelo,String FK_Cliente) {
-		return new Equipamento(id,nome,modelo,FK_Cliente);
+	public Equipamento criarEquipamento(String tipo, String modelo, String documentoCliente) throws InvalidArgumentException {
+	    Equipamento e = new Equipamento(0, modelo, documentoCliente, documentoCliente);
+	   equipamentos.add(e); 
+	    return e;
 	}
-	
+
 	
 }
