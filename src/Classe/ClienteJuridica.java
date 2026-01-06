@@ -12,7 +12,7 @@ public class ClienteJuridica extends Cliente {
 
     @Override
     public String getDocumento() {
-        return this.cnpj; // Para o sistema, o documento da Pessoa Jurídica é o CNPJ
+        return this.cnpj; 
     }
 
     public String getCnpj() { return cnpj; }
