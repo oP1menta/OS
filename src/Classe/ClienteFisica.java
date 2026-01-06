@@ -12,7 +12,7 @@ public class ClienteFisica extends Cliente {
 
     @Override
     public String getDocumento() {
-        return this.cpf; // Para o sistema, o documento da Pessoa Física é o CPF
+        return this.cpf; 
     }
 
     public String getCpf() { return cpf; }
