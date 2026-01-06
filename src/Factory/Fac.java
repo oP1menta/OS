@@ -52,7 +52,7 @@ public class Fac {
 	
 	public Equipamento criarEquipamento(String tipo, String modelo, String documentoCliente) throws InvalidArgumentException {
 	    Equipamento e = new Equipamento(0, modelo, documentoCliente, documentoCliente);
-	   equipamentos.add(e); // Adiciona à lista interna da Factory
+	   equipamentos.add(e); 
 	    return e;
 	}
 

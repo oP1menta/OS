@@ -37,7 +37,7 @@ public class Equipamento {
     }
     
     public void setId(int id) throws InvalidArgumentException {
-        if (id < 0) {            
+        if (id <= 0) {            
             throw new InvalidArgumentException("Id inválido");
         } else {
             this.id = id;
