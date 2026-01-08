@@ -2,7 +2,7 @@ package Classe;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-
+//aiaiai
 public class Usuario {
 	private final String login;
 	private String senhaHash;
