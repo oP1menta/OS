@@ -16,6 +16,11 @@ public class Fac {
 		return InstanciaUnica;
 	}
 
+	public static Usuario criarUsuario(String login, String senha) {
+		return new Usuario(login,senha);
+	}
+	
+
 	
 	
 	public Cliente criarCliente(
