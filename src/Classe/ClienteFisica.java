@@ -7,7 +7,7 @@ public class ClienteFisica extends Cliente {
 
     public ClienteFisica(String nome, String telefone, String email, String cpf) throws InvalidArgumentException {
         super(nome, telefone, email);
-        this.cpf = cpf;
+        this.setCpf(cpf);
     }
 
     @Override

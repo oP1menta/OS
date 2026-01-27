@@ -1,75 +1,134 @@
 package Classe;
-import java.util.Date;
-import Classe.*;
-import Exception.InvalidArgumentException;
+
+import dominio.enums.StatusOrdemServico;
+import java.time.LocalDateTime;
 
 public class OrdemDeServico {
-	private Cliente cliente;
-	private Equipamento equipamento;
-	private int Id_Os;
-	private Date Data_Abertura,Data_Fechamento;
-	private String Descricao;
-	private int FK_Equipamento;
-	private int FK_Usuario;
 
-	public OrdemDeServico(
-			Cliente cliente,
-			Equipamento equipamento,
-			int Id_Os,
-			Date Data_Abertura,
-			String Descricao,
-			int FK_Equipamento,
-			int FK_Usuario) throws InvalidArgumentException {
-		if (cliente == null) {
-			throw new InvalidArgumentException("Ordem de Serviço Sem Cliente");
-		}
-		else if (equipamento == null){
-			throw new InvalidArgumentException("Ordem de Serviço Sem Maquina");
-			}
-		else {
-			this.cliente=cliente;
-			this.equipamento=equipamento;
-			setDescricao(Descricao);
-			try {
-				setId_Os(Id_Os);
-			} catch (InvalidArgumentException e) {
-				e.printStackTrace();
-			}
-			try {
-				setData(Data_Abertura);
-			} catch (InvalidArgumentException e) {
-				e.printStackTrace();
-			}
-		}
-	
-	}
+    private Long id;
+    private Equipamento equipamento;
 
-	
-	public void setDescricao(String Descricao) {
-		this.Descricao = Descricao;
-	}
-	
-	public void setId_Os(int Id_Os) throws InvalidArgumentException {
-		if(Id_Os < 0) {
-			throw new InvalidArgumentException("Id da OS Inválido");
-		}
-		else {
-		this.Id_Os = Id_Os;
-		}
-	}
-	
-	public void setData(Date Data_Abertura) throws InvalidArgumentException {
-		if (Data_Abertura == null) {
-			throw new InvalidArgumentException("Data de abertura de OS invalida ou nula");
-		}
-		else {
-			this.Data_Abertura = Data_Abertura;			
-		}
-	}
+    private LocalDateTime dataAbertura;
+    private LocalDateTime dataInicio;
 
-	public String getDescricao() {return Descricao;}
-	public int getId_Os() {return Id_Os;}
-	public Date getData_Abertura() {return Data_Abertura;}
-	
+    
+    private LocalDateTime dataFechamentoPrevisto;
+    private LocalDateTime dataFechamentoReal;
+
+    private String descricaoProblema;
+    private String observacoesTecnicas;
+
+    private StatusOrdemServico status;
+
+ 
+    private Orçamento orcamentoAprovado;
+
+    
+
+    public OrdemDeServico(Equipamento equipamento,
+                          String descricaoProblema,
+                          LocalDateTime dataFechamentoPrevisto) {
+
+        if (equipamento == null)
+            throw new IllegalArgumentException("Equipamento obrigatório");
+
+        if (dataFechamentoPrevisto == null)
+            throw new IllegalArgumentException("Data prevista obrigatória");
+
+        this.equipamento = equipamento;
+        this.descricaoProblema = descricaoProblema;
+        this.dataFechamentoPrevisto = dataFechamentoPrevisto;
+
+        this.dataAbertura = LocalDateTime.now();
+        this.status = StatusOrdemServico.PENDENTE;
+    }
+
+    
+
+    public void iniciar(Orçamento orcamento) {
+
+        if (orcamento == null)
+            throw new IllegalArgumentException("Orçamento obrigatório");
+
+        if (!orcamento.estaAprovado())
+            throw new IllegalStateException(
+                "Não é possível iniciar OS sem orçamento aprovado"
+            );
+
+        if (orcamento.getOrdemDeServico() == null ||
+            !orcamento.getOrdemDeServico().equals(this))
+            throw new IllegalStateException(
+                "Orçamento não pertence a esta Ordem de Serviço"
+            );
+
+        if (status != StatusOrdemServico.PENDENTE)
+            throw new IllegalStateException("OS já iniciada");
+
+        this.orcamentoAprovado = orcamento;
+        this.status = StatusOrdemServico.EM_ANDAMENTO;
+        this.dataInicio = LocalDateTime.now();
+    }
+
+    public void concluir(String observacoesTecnicas) {
+
+        if (status != StatusOrdemServico.EM_ANDAMENTO)
+            throw new IllegalStateException(
+                "Apenas OS em andamento podem ser concluídas"
+            );
+
+        this.observacoesTecnicas = observacoesTecnicas;
+        this.dataFechamentoReal = LocalDateTime.now();
+        this.status = StatusOrdemServico.CONCLUIDA;
+    }
+
+    public boolean estaAtrasada() {
+        return status == StatusOrdemServico.EM_ANDAMENTO &&
+               LocalDateTime.now().isAfter(dataFechamentoPrevisto);
+    }
+
+    //  GETTERS E SETTERS 
+
+    public Long getId() {
+        return id;
+    }
+
+    public Equipamento getEquipamento() {
+        return equipamento;
+    }
+
+    public LocalDateTime getDataAbertura() {
+        return dataAbertura;
+    }
+
+    public LocalDateTime getDataInicio() {
+        return dataInicio;
+    }
+
+    public LocalDateTime getDataFechamentoPrevisto() {
+        return dataFechamentoPrevisto;
+    }
+
+    public LocalDateTime getDataFechamentoReal() {
+        return dataFechamentoReal;
+    }
+
+    public String getDescricaoProblema() {
+        return descricaoProblema;
+    }
+
+    public String getObservacoesTecnicas() {
+        return observacoesTecnicas;
+    }
+
+    public StatusOrdemServico getStatus() {
+        return status;
+    }
+
+    public Orçamento getOrcamentoAprovado() {
+        return orcamentoAprovado;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 }
-

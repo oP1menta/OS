@@ -1,65 +1,79 @@
 package Factory;
-import java.util.ArrayList;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 import Classe.*;
 import Exception.InvalidArgumentException;
 
 public class Fac {
-	private ArrayList<Cliente> clientes = new ArrayList<>();
-	private ArrayList<Equipamento> equipamentos = new ArrayList<>();
-	
-	private static Fac InstanciaUnica;
-	private Fac() {}
-	public static Fac getInstancia() {
-		if (InstanciaUnica == null) {
-			InstanciaUnica = new Fac();
-		}
-		return InstanciaUnica;
-	}
 
-	public static Usuario criarUsuario(String login, String senha) {
-		return new Usuario(login,senha);
-	}
-	
+    private static Fac instanciaUnica;
 
-	
-	
-	public Cliente criarCliente(
-		    String nome,
-		    String telefone,
-		    String email,
-		    String documento
-		) throws InvalidArgumentException {
+    private Fac() {}
 
-		    documento = documento.replaceAll("\\D", "");
+    public static Fac getInstancia() {
+        if (instanciaUnica == null) {
+            instanciaUnica = new Fac();
+        }
+        return instanciaUnica;
+    }
 
-		    Cliente c;
+    // --- USUÁRIO ---
+    public Usuario criarUsuario(String login, String senha) {
+        return new Usuario(login, senha);
+    }
 
-		    if (documento.length() == 11) {
-		        c = new ClienteFisica(nome, telefone, email, documento);
-		    } 
-		    else if (documento.length() == 14) {
-		        c = new ClienteJuridica(nome, telefone, email, documento);
-		    } 
-		    else {
-		        throw new InvalidArgumentException("Documento invalido");
-		    }
+    public Usuario criarUsuarioComHash(String login, String senhaHash) {
+        return new Usuario(login, senhaHash, true);
+    }
 
-		    clientes.add(c);
-		    return c;
-		}
-	public ArrayList<Cliente> getCliente() {
-    return clientes;
-	}
-	
-	public ArrayList<Equipamento> getEquipamento() {
-	    return equipamentos;
-	    }
-	
-	public Equipamento criarEquipamento(String tipo, String modelo, String documentoCliente) throws InvalidArgumentException {
-	    Equipamento e = new Equipamento(0, modelo, documentoCliente, documentoCliente);
-	   equipamentos.add(e); 
-	    return e;
-	}
+    //  CLIENTE 
+    public Cliente criarCliente(String nome, String telefone, String email, String documento)
+            throws InvalidArgumentException {
 
-	
+        String docLimpo = documento.replaceAll("\\D", "");
+
+        if (docLimpo.length() == 11) {
+            return new ClienteFisica(nome, telefone, email, docLimpo);
+        } else if (docLimpo.length() == 14) {
+            return new ClienteJuridica(nome, telefone, email, docLimpo);
+        } else {
+            throw new InvalidArgumentException( "Documento inválido: deve ter 11 (CPF) ou 14 (CNPJ) dígitos.");
+        }
+    }
+
+    //  EQUIPAMENTO 
+    public Equipamento criarEquipamento(String nome, String modelo, String cliente) {
+
+        if (nome == null || nome.isBlank())
+            throw new IllegalArgumentException("Nome obrigatório");
+
+        if (modelo == null || modelo.isBlank())
+            throw new IllegalArgumentException("Modelo obrigatório");
+
+        if (cliente == null)
+            throw new IllegalArgumentException("Cliente obrigatório");
+
+        return new Equipamento(nome, modelo, cliente);
+    }
+
+    // ORDEM DE SERVIÇO
+    public OrdemDeServico criarOrdemDeServico(
+            Equipamento equipamento,
+            String descricaoProblema,
+            LocalDateTime dataFechamentoPrevista) {
+
+        return new OrdemDeServico(equipamento, descricaoProblema, dataFechamentoPrevista);
+    }
+
+    // --- ORÇAMENTO ---
+    public Orçamento criarOrcamento(
+            String peca,
+            BigDecimal valor,
+            String tipoPagamento,
+            OrdemDeServico os) {
+
+        return new Orçamento(peca, valor, tipoPagamento, os);
+    }
 }

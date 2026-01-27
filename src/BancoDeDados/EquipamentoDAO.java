@@ -3,75 +3,176 @@ package BancoDeDados;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+
 import Classe.Equipamento;
 import Exception.InvalidArgumentException;
+import Factory.Fac;
 
 public class EquipamentoDAO {
 
-   
-    private Equipamento criarEquipamentoDoResultSet(ResultSet rs) throws SQLException, InvalidArgumentException {
-       
-        return new Equipamento(
-            rs.getInt("id"), 
-            rs.getString("nome"), 
-            rs.getString("modelo"),
-            rs.getString("documento_cliente") 
+
+    private Equipamento montar(ResultSet rs)
+            throws SQLException, InvalidArgumentException {
+
+        Equipamento eq = Fac.getInstancia().criarEquipamento(
+                rs.getString("nome"),
+                rs.getString("modelo"),
+                rs.getString("documento_cliente")
         );
+
+        eq.setId(rs.getInt("id"));
+        eq.setAtivo(rs.getBoolean("ativo"));
+
+        return eq;
     }
 
-   
-    public void inserir(Equipamento equipamento, Connection conn) {
-        String sql = "INSERT INTO equipamento (nome, modelo, documento_cliente) VALUES (?, ?, ?)";
 
-        try (PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setString(1, equipamento.getNome());
-            stmt.setString(2, equipamento.getModelo());
-            stmt.setString(3, equipamento.getDocumentoCliente()); 
-            
-            stmt.executeUpdate();
-            
-            try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
-                if (generatedKeys.next()) {
-                    equipamento.setId(generatedKeys.getInt(1));
-                }
-            }
-            System.out.println(" Sucesso: Equipamento " + equipamento.getNome() + "do cliente " + equipamento.getDocumentoCliente());
+    public void salvar(Equipamento eq) throws InvalidArgumentException {
 
-        } catch (SQLException | InvalidArgumentException e) {
-            System.err.println(" Erro ao Inserir Equipamento: " + e.getMessage());
-        }
-    }
+        String sql = """
+            INSERT INTO equipamento (nome, modelo, documento_cliente, ativo)
+            VALUES (?, ?, ?, ?)
+        """;
 
-    
-    public Equipamento buscarPorId(int id, Connection conn) {
-        String sql = "SELECT * FROM equipamento WHERE id = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            try (ResultSet rs = stmt.executeQuery()) {
+        conect conexaoObj = new conect();
+
+        try (Connection con = conexaoObj.getConexao();
+             PreparedStatement ps = con.prepareStatement(
+                     sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setString(1, eq.getNome());
+            ps.setString(2, eq.getModelo());
+            ps.setString(3, eq.getDocumentoCliente());
+            ps.setBoolean(4, eq.getAtivo());
+
+            ps.executeUpdate();
+
+            try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
-                    return criarEquipamentoDoResultSet(rs);
+                    eq.setId(rs.getInt(1));
                 }
             }
-        } catch (SQLException | InvalidArgumentException e) {
-            System.err.println(" Erro na Busca por ID: " + e.getMessage());
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao salvar equipamento", e);
         }
-        return null; 
     }
 
-    
-    public List<Equipamento> buscarTodos(Connection conn) {
+
+    public List<Equipamento> buscarPorDocumentoCliente(String documento) {
+
         List<Equipamento> lista = new ArrayList<>();
-        String sql = "SELECT * FROM equipamento";
-        
-        try (PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            
-            while (rs.next()) {
-                lista.add(criarEquipamentoDoResultSet(rs));
+
+        String sql = """
+            SELECT * FROM equipamento
+            WHERE documento_cliente = ? AND ativo = TRUE
+        """;
+
+        conect conexaoObj = new conect();
+
+        try (Connection con = conexaoObj.getConexao();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, documento);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(montar(rs));
+                }
             }
+
         } catch (SQLException | InvalidArgumentException e) {
-            System.err.println(" Erro ao buscar todos os equipamentos: " + e.getMessage());
+            throw new RuntimeException("Erro ao buscar equipamentos do cliente", e);
         }
+
         return lista;
+    }
+
+
+    public Equipamento buscarPorId(Long equipamentoId) {
+
+        String sql = "SELECT * FROM equipamento WHERE id = ?";
+
+        conect conexaoObj = new conect();
+
+        try (Connection con = conexaoObj.getConexao();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setLong(1, equipamentoId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return montar(rs);
+                }
+            }
+
+        } catch (SQLException | InvalidArgumentException e) {
+            throw new RuntimeException("Erro ao buscar equipamento por ID", e);
+        }
+
+        return null;
+    }
+
+    /* ===================== LIST ALL ===================== */
+
+    public List<Equipamento> listarTodos() {
+
+        List<Equipamento> lista = new ArrayList<>();
+
+        String sql = "SELECT * FROM equipamento WHERE ativo = TRUE";
+
+        conect conexaoObj = new conect();
+
+        try (Connection con = conexaoObj.getConexao();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                lista.add(montar(rs));
+            }
+
+        } catch (SQLException | InvalidArgumentException e) {
+            throw new RuntimeException("Erro ao listar equipamentos", e);
+        }
+
+        return lista;
+    }
+
+    /* ===================== DELETE FÍSICO ===================== */
+
+    public void deletar(int id) {
+
+        String sql = "DELETE FROM equipamento WHERE id = ?";
+
+        conect conexaoObj = new conect();
+
+        try (Connection con = conexaoObj.getConexao();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao deletar equipamento", e);
+        }
+    }
+
+    /* ===================== DELETE LÓGICO ===================== */
+
+    public void desativar(int id) {
+
+        String sql = "UPDATE equipamento SET ativo = FALSE WHERE id = ?";
+
+        conect conexaoObj = new conect();
+
+        try (Connection con = conexaoObj.getConexao();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao desativar equipamento", e);
+        }
     }
 }
