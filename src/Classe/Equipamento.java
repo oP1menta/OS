@@ -2,46 +2,51 @@ package Classe;
 
 import Exception.InvalidArgumentException;
 
-
 public class Equipamento {
-    private int id = 0;
+
+    private int id;
     private String nome;
     private String modelo;
-    private String documentoCliente; 
-    private Boolean ativo = true;
+    private String documentoCliente;
+    private Boolean ativo;
+
+    public Equipamento(String nome, String modelo, String documentoCliente) {
+        setNome(nome);
+        try {
+			setModelo(modelo);
+		} catch (InvalidArgumentException e) {
+			
+			e.printStackTrace();
+		}
+        this.setDocumentoCliente(documentoCliente); 
+        this.setAtivo(true); 
+    }
 
   
-    public Equipamento(int id, String nome, String modelo, String documentoCliente) {
+    public Equipamento(int id, String nome, String modelo, String documentoCliente, Boolean ativo)
+            {
+
         try {
-            setId(id);
-        } catch (InvalidArgumentException e) {
-            e.printStackTrace();
-        }
-        
+			setId(id);
+		} catch (InvalidArgumentException e) {
+			e.printStackTrace();
+		}
         setNome(nome);
-        
         try {
-            setModelo(modelo);
-        } catch (InvalidArgumentException e) {
-            e.printStackTrace();
-        }
-        
+			setModelo(modelo);
+		} catch (InvalidArgumentException e) {
+						e.printStackTrace();
+		}
         this.documentoCliente = documentoCliente;
-        
+        this.ativo = ativo;
     }
-    
 
+ 
 
-    
-    public Equipamento() {
-    }
-    
     public void setId(int id) throws InvalidArgumentException {
-        if (id <= 0) {            
+        if (id <= 0)
             throw new InvalidArgumentException("Id inválido");
-        } else {
-            this.id = id;
-        }
+        this.id = id;
     }
 
     public void setNome(String nome) {
@@ -49,34 +54,31 @@ public class Equipamento {
     }
 
     public void setModelo(String modelo) throws InvalidArgumentException {
-        if (modelo != null && !modelo.isEmpty()) {            
-            this.modelo = modelo;
-        } else {
-            throw new InvalidArgumentException("Modelo vazio");
-        }
+        if (modelo == null || modelo.isBlank())
+            throw new InvalidArgumentException("Modelo inválido");
+        this.modelo = modelo;
     }
 
     public void setDocumentoCliente(String documentoCliente) {
         this.documentoCliente = documentoCliente;
     }
-    
 
-	public void setAtivo(Boolean ativo) {
-		this.ativo = ativo;
-	}
+    public void setAtivo(Boolean ativo) {
+        this.ativo = ativo;
+    }
+
+    
+       //GETTERS
+    
 
     public int getId() { return id; }
     public String getNome() { return nome; }
     public String getModelo() { return modelo; }
     public String getDocumentoCliente() { return documentoCliente; }
-    public Boolean getAtivo() {return ativo;}
-   
+    public Boolean getAtivo() { return ativo; }
+
     @Override
     public String toString() {
-        return "\n[Equipamento]" +
-               "\nID: " + id +
-               "\nNome: " + nome +
-               "\nModelo: " + modelo +
-               "\nCliente (Doc): " + documentoCliente + "\n";
+        return nome + " - " + modelo;
     }
 }

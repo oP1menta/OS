@@ -1,55 +1,39 @@
-
 package BancoDeDados;
 
-//Imports necessario para funcionalidade da classe
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class conect {
-	
 
-//Atributo necessarios 
-		private String driver = "org.postgresql.Driver";
-		private String user = "postgres";
-		private String senha = "GodHypnos.66";
-		private String url = "jdbc:postgresql://localhost:5432/projetointegrador";
-		private Connection con = null;
+    private final String driver = "org.postgresql.Driver";
+    private final String user = "postgres";
+    private final String senha = "GodHypnos.66";
+    private final String url = "jdbc:postgresql://localhost:5432/ProjetoIntegradorBD";
 
-		public conect() {
-			try
-			{
-				Class.forName(driver);
-				//Connection con = null;
-				this.con = (Connection) DriverManager.getConnection(url, user, senha);
-				System.out.println("Conexão realizada com sucesso.");
-			}
-			catch (ClassNotFoundException ex)
-			{
-				System.err.print(ex.getMessage());
-			} 
-			catch (SQLException e)
-			{
-				System.err.print(e.getMessage());
-			}
-		}
-		
-		public Connection getConexao(){
-			return this.con;
-		}
+    private Connection con;
 
-		public void fecharConexao(){
-			try{
-				
-				if(con != null)
-					con.close();
-			}catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-	}
+    public conect() {
+        try {
+            Class.forName(driver);
+            this.con = DriverManager.getConnection(url, user, senha);
+            System.out.println("Conexão realizada com sucesso.");
+        } catch (ClassNotFoundException | SQLException e) {
+            throw new RuntimeException("Erro ao conectar com o banco de dados", e);
+        }
+    }
 
+    public Connection getConexao() {
+        return con;
+    }
 
-
-
-
+    public void fecharConexao() {
+        try {
+            if (con != null && !con.isClosed()) {
+                con.close();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao fechar conexão", e);
+        }
+    }
+}

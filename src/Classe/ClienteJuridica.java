@@ -7,7 +7,7 @@ public class ClienteJuridica extends Cliente {
 
     public ClienteJuridica(String nome, String telefone, String email, String cnpj) throws InvalidArgumentException {
         super(nome, telefone, email);
-        this.cnpj = cnpj;
+        this.setCnpj(cnpj);
     }
 
     @Override

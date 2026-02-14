@@ -13,13 +13,13 @@ public abstract class Cliente {
 
    
     public Cliente(String nome, String telefone, String email) throws InvalidArgumentException {
-        setNome(nome);
-        this.telefone = telefone;
-        this.email = email;
+        this.setNome(nome);
+        this.setTelefone(telefone);
+        this.setEmail(email);
     }
 
   
-    public abstract String getDocumento();
+   
 
    
     public void setNome(String nome) throws InvalidArgumentException {
@@ -32,8 +32,16 @@ public abstract class Cliente {
     public void addEquipamento(Equipamento e) {
         this.equipamentos.add(e);
     }
+    public void setTelefone(String telefone) {
+		this.telefone = telefone;
+	}
 
- 
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public abstract String getDocumento();
     public String getNome() { return nome; }
     public String getTelefone() { return telefone; }
     public String getEmail() { return email; }
@@ -46,4 +54,7 @@ public abstract class Cliente {
         return String.format("\nNome: %s\nDocumento: %s\nTelefone: %s\nAtivo: %s", 
                              nome, getDocumento(), telefone, ativo ? "Sim" : "Não");
     }
+
+
+	
 }
