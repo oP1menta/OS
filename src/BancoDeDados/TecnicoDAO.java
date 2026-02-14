@@ -1,7 +1,7 @@
 package BancoDeDados;
 
 import Classe.Tecnico;
-
+import Exception.InvalidArgumentException;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -13,24 +13,23 @@ public class TecnicoDAO {
     public void salvar(Tecnico tecnico) {
 
         String sql = """
-            INSERT INTO tecnico (nome, documento, equipamento, data_associacao)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO tecnico (nome, documento, data_associacao)
+            VALUES (?, ?, ?)
         """;
         conect conexaoObj = new conect();
         try (Connection con = conexaoObj.getConexao();
              PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
-            ps.setString(1, tecnico.getNome());
-            ps.setString(2, tecnico.getDocumento());
-            ps.setString(3, tecnico.getEquipamento());
-            ps.setDate(4, Date.valueOf(tecnico.getDataAssociacao()));
-
-            ps.executeUpdate();
-
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) {
-                tecnico.setId(rs.getInt(1));
-            }
+	        	ps.setString(1, tecnico.getNome());
+	        			
+	            ps.setString(2, tecnico.getDocumento());
+	            ps.setDate(3, Date.valueOf(tecnico.getDataAssociacao()));
+	
+	            ps.executeUpdate();
+	
+	            ResultSet rs = ps.getGeneratedKeys();
+	            if (rs.next()) {
+	                tecnico.setId(rs.getInt(1));
+	            }
 
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao salvar técnico", e);
@@ -50,8 +49,7 @@ public class TecnicoDAO {
             while (rs.next()) {
                 Tecnico tecnico = new Tecnico(
                         rs.getString("nome"),
-                        rs.getString("documento"),
-                        rs.getString("equipamento"),
+                        rs.getString("documento"),  
                         rs.getDate("data_associacao").toLocalDate()
                 );
                 tecnico.setId(rs.getInt("id"));
@@ -79,7 +77,6 @@ public class TecnicoDAO {
                 Tecnico tecnico = new Tecnico(
                         rs.getString("nome"),
                         rs.getString("documento"),
-                        rs.getString("equipamento"),
                         rs.getDate("data_associacao").toLocalDate()
                 );
                 tecnico.setId(rs.getInt("id"));

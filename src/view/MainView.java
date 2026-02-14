@@ -1,5 +1,4 @@
 package view;
-
 import Controller.*;
 import Exception.InvalidArgumentException;
 import Classe.*;
@@ -8,6 +7,7 @@ import dominio.enums.StatusOrdemServico;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -19,25 +19,26 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.List;
 
 public class MainView extends Application {
 
     private BorderPane root;
-
+    private final TecnicoController tecnicoController = new TecnicoController();
     private final UsuarioController usuarioController = new UsuarioController();
     private final ClienteController clienteController = new ClienteController();
     private final EquipamentoController equipamentoController = new EquipamentoController();
     private final OrdemDeServicoController osController = new OrdemDeServicoController();
-
+    private final OrçamentoController orcamentoController = new OrçamentoController();
     @Override
     public void start(Stage stage) {
         stage.setTitle("CONTRIMAQ • Service Desk");
-        stage.setScene(login());
+       stage.setScene(login());
         stage.show();
     }
 
-     //LOGIN 
 
     private Scene login() {
 
@@ -75,7 +76,6 @@ public class MainView extends Application {
         return new Scene(bg);
     }
 
-    // APP 
 
     private Scene app() throws InvalidArgumentException {
 
@@ -88,9 +88,8 @@ public class MainView extends Application {
         return new Scene(root, 1400, 850);
     }
 
-   //MENU
 
-    private VBox menu() {
+    private VBox menu() throws InvalidArgumentException {
 
         VBox m = new VBox(20);
         m.setPadding(new Insets(30));
@@ -103,125 +102,95 @@ public class MainView extends Application {
         m.getChildren().addAll(
                 logo,
                 menuBtn("📊 Dashboard", () -> {
+                    setCenter(dashboard());
+                }),
+                menuBtn("👤 Clientes", () -> setCenter(cliente())),
+                menuBtn("🛠 Equipamentos", () -> setCenter(equipamento())),
+                menuBtn("🧑‍🔧 Técnicos", () -> setCenter(tecnico())),
+                menuBtn("📄 Ordens", () -> {
 					try {
-						setCenter(dashboard());
-					} catch (InvalidArgumentException e) {
+						setCenter(ordemDeServico());
+					} catch (SQLException e) {
+				
 						e.printStackTrace();
 					}
 				}),
-                menuBtn("👤 Clientes", () -> setCenter(cliente())),
-                menuBtn("🛠 Equipamentos", () -> setCenter(equipamento())),
-                menuBtn("📄 Ordens", () -> setCenter(ordens()))
+                menuBtn("📄 Orçamento", () -> setCenter(orcamentos()))
         );
 
         return m;
     }
 
-   //dASH
 
-    private VBox dashboard() throws InvalidArgumentException {
+    private VBox dashboard() {
+
         VBox v = page();
-        List<OrdemDeServico> l = osController.listarTodas();
-        v.getChildren().add(cards(l));
+
+        List<OrdemDeServico> lista = osController.listarTodas();
+
+        v.getChildren().add(cards(lista));
+
         return v;
     }
-
-    private VBox cliente() {
+    
+    
+    private VBox tecnico() {
 
         VBox v = page();
 
-        TextField nome = input("Nome");
-        TextField telefone = input("Telefone");
-        TextField email = input("Email");
-        TextField documento = input("CPF / CNPJ");
+        Label titulo = title("Técnicos", 22);
+        Label sub = subtitle("Cadastro e listagem de técnicos do sistema");
 
-        ListView<String> lista = new ListView<>();
-        lista.setPrefHeight(250);
+        TextField nome = input("Nome do técnico");
+        TextField documento = input("Documento");
+       
 
-        Button salvar = primary("Salvar Cliente");
-        salvar.setOnAction(e -> {
-            try {
-                if (documento.getText().length() == 11) {
-                    clienteController.cadastrarClienteFisico(
-                            nome.getText(),
-                            telefone.getText(),
-                            email.getText(),
-                            documento.getText()
-                    );
+        Button salvar = primary("Salvar Técnico");
+
+        ListView<Tecnico> lista = new ListView<>();
+        lista.setPrefHeight(450);
+
+        lista.setCellFactory(lv -> new ListCell<>() {
+            @Override
+            protected void updateItem(Tecnico t, boolean empty) {
+                super.updateItem(t, empty);
+                if (empty || t == null) {
+                    setText(null);
                 } else {
-                    clienteController.cadastrarClienteJuridico(
-                            nome.getText(),
-                            telefone.getText(),
-                            email.getText(),
-                            documento.getText()
+                    setText(
+                            t.getNome() +
+                            " • " + t.getDocumento() +
+                            
+                            " • Desde: " + t.getDataAssociacao()
                     );
                 }
-
-                alert("Sucesso", "Cliente salvo com sucesso.");
-                atualizarListaClientes(lista);
-
-                nome.clear();
-                telefone.clear();
-                email.clear();
-                documento.clear();
-
-            } catch (Exception ex) {
-                alert("Erro", ex.getMessage());
             }
         });
 
-        atualizarListaClientes(lista);
-
-        v.getChildren().addAll(
-                title("Clientes", 26),
-                nome,
-                telefone,
-                email,
-                documento,
-                salvar,
-                subtitle("Clientes cadastrados"),
-                lista
+      
+        lista.setItems(
+                FXCollections.observableArrayList(
+                        tecnicoController.listarTodos()
+                )
         );
 
-        return v;
-    }
-
-    private void atualizarListaClientes(ListView<String> lista) {
-        lista.getItems().clear();
-        List<Cliente> clientes = clienteController.listarClientesPorNome("");
-        for (Cliente c : clientes) {
-            lista.getItems().add(
-                    c.getNome() + " • " + c.getDocumento()
-            );
-        }
-    }
-
-
-    private VBox equipamento() {
-
-        VBox v = page();
-
-        TextField nome = input("Equipamento");
-        TextField modelo = input("Modelo");
-        TextField documentoCliente = input("Documento do Cliente");
-
-        ListView<String> lista = new ListView<>();
-        lista.setPrefHeight(250);
-
-        Button salvar = primary("Salvar Equipamento");
         salvar.setOnAction(e -> {
             try {
-                equipamentoController.cadastrarEquipamento(
+                tecnicoController.cadastrar(
                         nome.getText(),
-                        modelo.getText(),
-                        documentoCliente.getText()
+                        documento.getText(),
+                        java.time.LocalDate.now()
                 );
 
-                alert("Sucesso", "Equipamento salvo com sucesso.");
-                atualizarListaEquipamentos(lista, documentoCliente.getText());
+                lista.setItems(
+                        FXCollections.observableArrayList(
+                                tecnicoController.listarTodos()
+                        )
+                );
 
                 nome.clear();
-                modelo.clear();
+                documento.clear();
+              
 
             } catch (Exception ex) {
                 alert("Erro", ex.getMessage());
@@ -229,50 +198,332 @@ public class MainView extends Application {
         });
 
         v.getChildren().addAll(
-                title("Equipamentos", 26),
+                titulo,
+                sub,
                 nome,
-                modelo,
-                documentoCliente,
+                documento,
                 salvar,
-                subtitle("Equipamentos do cliente"),
                 lista
         );
 
         return v;
     }
+    
+    private VBox orcamentos() {
 
-    private void atualizarListaEquipamentos(ListView<String> lista, String documentoCliente) {
-        lista.getItems().clear();
-        try {
-            List<Equipamento> equipamentos =
-                    equipamentoController.listarEquipamentosPorCliente(documentoCliente);
+        VBox v = page();
 
-            for (Equipamento e : equipamentos) {
-                lista.getItems().add(
-                        e.getNome() + " • " + e.getModelo()
+        Label titulo = title("Orçamentos", 22);
+        Label sub = subtitle("Criação e aprovação de orçamentos por técnico");
+
+        //Seleção do tecnico
+        ComboBox<Tecnico> tecnicos = new ComboBox<>();
+        tecnicos.setPromptText("Selecione o técnico");
+
+        tecnicos.setItems(
+                FXCollections.observableArrayList(
+                        tecnicoController.listarTodos()
+                )
+        );
+
+        //Inputs do Orça
+        TextField peca = input("Peça / serviço");
+        TextField valor = input("Valor");
+        TextField pagamento = input("Tipo de pagamento");
+
+        Button criar = primary("Criar orçamento");
+
+        
+        ListView<Orçamento> lista = new ListView<>();
+        lista.setPrefHeight(350);
+
+        // Atualiza lista ao trocar técnico
+        tecnicos.setOnAction(e -> {
+            Tecnico t = tecnicos.getValue();
+            if (t != null) {
+                lista.setItems(
+                        FXCollections.observableArrayList(
+                                orcamentoController.listarPorTecnico(t)
+                        )
                 );
             }
-        } catch (Exception e) {
-            alert("Erro", e.getMessage());
-        }
-    }
+        });
 
+        criar.setOnAction(e -> {
+            try {
 
-    private VBox ordens() {
-        VBox v = page();
-        ComboBox<Equipamento> eq = new ComboBox<>();
-        eq.setPrefHeight(44);
-        eq.setStyle(inputStyle());
+                Tecnico t = tecnicos.getValue();
+                if (t == null)
+                    throw new IllegalArgumentException("Selecione um técnico");
+
+                orcamentoController.criar(
+                        peca.getText(),
+                        new BigDecimal(valor.getText()),
+                        pagamento.getText(),
+                        t
+                );
+
+                lista.setItems(
+                        FXCollections.observableArrayList(
+                                orcamentoController.listarPorTecnico(t)
+                        )
+                );
+
+                peca.clear();
+                valor.clear();
+                pagamento.clear();
+
+            } catch (Exception ex) {
+                alert("Erro", ex.getMessage());
+            }
+        });
+
+        lista.setCellFactory(lv -> new ListCell<>() {
+            @Override
+            protected void updateItem(Orçamento o, boolean empty) {
+                super.updateItem(o, empty);
+                if (empty || o == null) {
+                    setText(null);
+                } else {
+                    setText( o.toString()
+                    );
+                }
+            }
+        });
+
+        
+        Button aprovar = primary("Aprovar");
+        Button reprovar = primary("Reprovar");
+
+        aprovar.setDisable(true);
+        reprovar.setDisable(true);
+
+        lista.getSelectionModel().selectedItemProperty().addListener((o, a, n) -> {
+            boolean ativo = n != null && n.estaPendente();
+            aprovar.setDisable(!ativo);
+            reprovar.setDisable(!ativo);
+        });
+
+        aprovar.setOnAction(e -> {
+            try {
+                Orçamento o = lista.getSelectionModel().getSelectedItem();
+                Tecnico t = tecnicos.getValue();
+
+                orcamentoController.aprovar(o.getId(), t);
+
+                lista.setItems(
+                        FXCollections.observableArrayList(
+                                orcamentoController.listarPorTecnico(t)
+                        )
+                );
+
+            } catch (Exception ex) {
+                alert("Erro", ex.getMessage());
+            }
+        });
+
+        reprovar.setOnAction(e -> {
+            try {
+                Orçamento o = lista.getSelectionModel().getSelectedItem();
+                Tecnico t = tecnicos.getValue();
+                
+
+                
+                orcamentoController.reprovar(o.getId(),  t);
+
+                lista.setItems(
+                        FXCollections.observableArrayList(
+                                orcamentoController.listarPorTecnico(t)
+                        )
+                );
+
+            } catch (Exception ex) {
+                alert("Erro", ex.getMessage());
+            }
+        });
+
         v.getChildren().addAll(
-                input("Documento do Cliente"),
-                eq,
-                area("Descrição do problema"),
-                primary("Abrir Ordem")
+                titulo,
+                sub,
+                tecnicos,
+                peca,
+                valor,
+                pagamento,
+                criar,
+                lista,
+                aprovar,
+                reprovar
+        );
+
+        return v;
+    }
+    
+    private VBox cliente() {
+        VBox v = page();
+        
+        v.getChildren().addAll(
+                input("Nome"),
+                input("Telefone"),
+                input("Email"),
+                input("CPF / CNPJ"),
+                primary("Salvar Cliente")
         );
         return v;
     }
 
-    /* =================  ================= */
+    private VBox equipamento() {
+        VBox v = page();
+        v.getChildren().addAll(
+                input("Equipamento"),
+                input("Modelo"),
+                input("Documento do Cliente"),
+                primary("Salvar Equipamento")
+        );
+        return v;
+    }
+
+    private VBox ordemDeServico() throws SQLException {
+
+        VBox v = page();
+
+        Label titulo = title("Ordens de Serviço", 22);
+        Label sub = subtitle("Gerenciamento de Ordens de Serviço");
+
+        
+        ComboBox<Equipamento> equipamentos = new ComboBox<>();
+        equipamentos.setPromptText("Selecione o equipamento");
+
+        equipamentos.setItems(
+                FXCollections.observableArrayList(
+                        equipamentoController.listarTodosEquipamentos()
+                )
+        );
+
+        
+        ListView<OrdemDeServico> listaOS = new ListView<>();
+        listaOS.setPrefHeight(300);
+
+        equipamentos.setOnAction(e -> {
+            Equipamento eq = equipamentos.getValue();
+            if (eq != null) {
+                listaOS.setItems(
+                        FXCollections.observableArrayList(
+                                osController.listarPorEquipamento(eq, null)
+                        )
+                );
+            }
+        });
+
+        listaOS.setCellFactory(lv -> new ListCell<>() {
+            @Override
+            protected void updateItem(OrdemDeServico os, boolean empty) {
+                super.updateItem(os, empty);
+                if (empty || os == null) {
+                    setText(null);
+                } else {
+                    setText(
+                            "OS #" + os.getId() +
+                            " | " + os.getStatus() +
+                            " | Aberta em: " + os.getDataAbertura()
+                    );
+                }
+            }
+        });
+
+        
+        ComboBox<Orçamento> orcamentos = new ComboBox<>();
+        orcamentos.setPromptText("Selecione o orçamento aprovado");
+
+        orcamentos.setCellFactory(lv -> new ListCell<>() {
+            @Override
+            protected void updateItem(Orçamento o, boolean empty) {
+                super.updateItem(o, empty);
+                setText(empty || o == null ? null :
+                        "R$ " + o.getValor() + " | " + o.getTecnicoResponsavel().getNome()
+                );
+            }
+        });
+
+        orcamentos.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(Orçamento o, boolean empty) {
+                super.updateItem(o, empty);
+                setText(empty || o == null ? null :
+                        "R$ " + o.getValor()
+                );
+            }
+        });
+
+        
+        Button iniciar = primary("Iniciar OS");
+        Button concluir = primary("Concluir OS");
+
+        iniciar.setDisable(true);
+        concluir.setDisable(true);
+
+        listaOS.getSelectionModel().selectedItemProperty().addListener((o, a, n) -> {
+            iniciar.setDisable(n == null || !n.estaPendente());
+            concluir.setDisable(n == null || !n.estaEmAndamento());
+        });
+
+        iniciar.setOnAction(e -> {
+            try {
+                OrdemDeServico os = listaOS.getSelectionModel().getSelectedItem();
+                Orçamento orc = orcamentos.getValue();
+
+                if (orc == null || !orc.estaAprovado())
+                    throw new IllegalArgumentException("Selecione um orçamento aprovado");
+
+                osController.iniciar(
+                        os.getId(),
+                        orc,
+                        os.getEquipamento()
+                );
+
+                equipamentos.fireEvent(
+                        new ActionEvent()
+                );
+
+            } catch (Exception ex) {
+                alert("Erro", ex.getMessage());
+            }
+        });
+
+        concluir.setOnAction(e -> {
+            try {
+                OrdemDeServico os = listaOS.getSelectionModel().getSelectedItem();
+                String obs = "Observações técnicas";
+
+                osController.concluir(
+                        os.getId(),
+                        obs,
+                        os.getEquipamento(),
+                        os.getOrcamentoAprovado()
+                );
+
+                equipamentos.fireEvent(
+                        new ActionEvent()
+                );
+
+            } catch (Exception ex) {
+                alert("Erro", ex.getMessage());
+            }
+        });
+
+        v.getChildren().addAll(
+                titulo,
+                sub,
+                equipamentos,
+                listaOS,
+                orcamentos,
+                iniciar,
+                concluir
+        );
+
+        return v;
+    }
+
+    
 
     private void setCenter(Node n) {
         fade(n);
@@ -354,7 +605,6 @@ public class MainView extends Application {
         return b;
     }
 
-    /* ================= STYLE ================= */
 
     private void hoverButton(Button b) {
         b.setOnMouseEntered(e -> b.setStyle(btnHover()));
@@ -390,11 +640,11 @@ public class MainView extends Application {
         a.showAndWait();
     }
 
-    // CSS INLINE
 
     private String inputStyle() {
         return "-fx-background-radius:10;-fx-border-radius:10;-fx-border-color:#e5e7eb;-fx-padding:12;";
     }
+    
 
     private String inputFocus() {
         return "-fx-background-radius:10;-fx-border-radius:10;-fx-border-color:#2563eb;-fx-padding:12;";

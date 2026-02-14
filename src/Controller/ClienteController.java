@@ -20,9 +20,7 @@ public class ClienteController {
         this.factory = Fac.getInstancia();
     }
 
-    /* =========================
-       CADASTRO
-       ========================= */
+   
 
     public void cadastrarClienteFisico(String nome, String telefone, String email, String cpf)
             throws InvalidArgumentException {
@@ -38,9 +36,7 @@ public class ClienteController {
         clienteDAO.salvarcliente(cliente);
     }
 
-    /* =========================
-       CONSULTAS
-       ========================= */
+   
 
     public Cliente buscarClientePorDocumento(String documento) {
         return clienteDAO.buscarPorDocumento(documento);
@@ -50,9 +46,7 @@ public class ClienteController {
         return clienteDAO.listarPorNome(nome);
     }
 
-    /* =========================
-       DESATIVAÇÃO (se existir)
-       ========================= */
+   
 
     public void deletarCliente(String documento) {
         clienteDAO.deletarCliente(documento);

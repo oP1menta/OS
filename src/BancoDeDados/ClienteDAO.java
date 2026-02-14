@@ -49,6 +49,9 @@ public class ClienteDAO {
 
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao salvar cliente", e);
+        } finally {
+        	if(conexaoObj != null)
+        		conexaoObj.fecharConexao();
         }
     }
 
@@ -76,6 +79,9 @@ public class ClienteDAO {
 
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao atualizar cliente", e);
+        } finally {
+        	if(conexaoObj != null)
+        		conexaoObj.fecharConexao();
         }
     }
 
@@ -99,6 +105,9 @@ public class ClienteDAO {
 
         } catch (SQLException | InvalidArgumentException e) {
             throw new RuntimeException("Erro ao buscar cliente", e);
+        } finally {
+        	if(conexaoObj != null)
+        		conexaoObj.fecharConexao();
         }
 
         return null;
@@ -129,6 +138,8 @@ public class ClienteDAO {
 
         } catch (SQLException | InvalidArgumentException e) {
             throw new RuntimeException("Erro ao listar clientes", e);
+        } finally {
+            conexaoObj.fecharConexao();
         }
 
         return clientes;
@@ -149,6 +160,8 @@ public class ClienteDAO {
 
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao desativar cliente", e);
+        } finally {
+            conexaoObj.fecharConexao();
         }
     }
 
@@ -167,6 +180,8 @@ public class ClienteDAO {
 
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao excluir cliente", e);
+        }  finally {
+            conexaoObj.fecharConexao();
         }
     }
 }

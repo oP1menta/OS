@@ -55,6 +55,8 @@ public class EquipamentoDAO {
 
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao salvar equipamento", e);
+        } finally {
+            conexaoObj.fecharConexao();
         }
     }
 
@@ -83,6 +85,8 @@ public class EquipamentoDAO {
 
         } catch (SQLException | InvalidArgumentException e) {
             throw new RuntimeException("Erro ao buscar equipamentos do cliente", e);
+        } finally {
+            conexaoObj.fecharConexao();
         }
 
         return lista;
@@ -108,12 +112,14 @@ public class EquipamentoDAO {
 
         } catch (SQLException | InvalidArgumentException e) {
             throw new RuntimeException("Erro ao buscar equipamento por ID", e);
+        } finally {
+            conexaoObj.fecharConexao();
         }
 
         return null;
     }
 
-    /* ===================== LIST ALL ===================== */
+   
 
     public List<Equipamento> listarTodos() {
 
@@ -133,12 +139,14 @@ public class EquipamentoDAO {
 
         } catch (SQLException | InvalidArgumentException e) {
             throw new RuntimeException("Erro ao listar equipamentos", e);
+        } finally {
+            conexaoObj.fecharConexao();
         }
 
         return lista;
     }
 
-    /* ===================== DELETE FÍSICO ===================== */
+    
 
     public void deletar(int id) {
 
@@ -154,10 +162,12 @@ public class EquipamentoDAO {
 
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao deletar equipamento", e);
+        } finally {
+            conexaoObj.fecharConexao();
         }
     }
 
-    /* ===================== DELETE LÓGICO ===================== */
+
 
     public void desativar(int id) {
 
@@ -173,6 +183,8 @@ public class EquipamentoDAO {
 
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao desativar equipamento", e);
+        } finally {
+            conexaoObj.fecharConexao();
         }
     }
 }

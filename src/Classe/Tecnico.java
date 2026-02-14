@@ -2,18 +2,29 @@ package Classe;
 
 import java.time.LocalDate;
 
+import Exception.InvalidArgumentException;
+
 public class Tecnico {
 
     private int id;
     private String nome;
     private String documento;
-    private String equipamento;
+    
     private LocalDate dataAssociacao;
 
-    public Tecnico(String nome, String documento, String equipamento, LocalDate dataAssociacao) {
-        this.setNome(nome);
-        this.setDocumento (documento);
-        this.setEquipamento (equipamento);
+    public Tecnico(String nome, String documento, LocalDate dataAssociacao) {
+        try {
+			this.setNome(nome);
+		} catch (InvalidArgumentException e) {
+			
+			e.printStackTrace();
+		}
+        try {
+			this.setDocumento (documento);
+		} catch (InvalidArgumentException e) {
+			e.printStackTrace();
+		}
+       
         this.setDataAssociacao(dataAssociacao);
     }
 
@@ -26,12 +37,8 @@ public class Tecnico {
         return nome;
     }
 
-    public String getDocumento() {
+    public String getDocumento()  {
         return documento;
-    }
-
-    public String getEquipamento() {
-        return equipamento;
     }
 
     public LocalDate getDataAssociacao() {
@@ -43,19 +50,28 @@ public class Tecnico {
         this.id = id;
     }
 
-	public void setNome(String nome) {
-		this.nome = nome;
+	public void setNome(String nome) throws InvalidArgumentException {
+	if(nome == null) {
+		throw new InvalidArgumentException("O tecnico Precisa ter um nome");}
+		else
+			this.nome = nome;
 	}
 
-	public void setDocumento(String documento) {
+	public void setDocumento(String documento) throws InvalidArgumentException {
+		if(documento == null) {
+			throw new InvalidArgumentException("O tecnico Precisa documento");}
+			else
 		this.documento = documento;
 	}
 
-	public void setEquipamento(String equipamento) {
-		this.equipamento = equipamento;
-	}
 
 	public void setDataAssociacao(LocalDate dataAssociacao) {
 		this.dataAssociacao = dataAssociacao;
 	}
+	
+	public String toString() {
+		return "Nome: " + getNome() + "\n Documento:" + getDocumento() + " \nData em entrada" + getDataAssociacao();
+	}
+	
+
 }

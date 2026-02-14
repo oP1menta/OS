@@ -2,16 +2,16 @@ package Classe;
 
 import dominio.enums.StatusOrdemServico;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class OrdemDeServico {
 
+    
     private Long id;
     private Equipamento equipamento;
 
     private LocalDateTime dataAbertura;
     private LocalDateTime dataInicio;
-
-    
     private LocalDateTime dataFechamentoPrevisto;
     private LocalDateTime dataFechamentoReal;
 
@@ -19,31 +19,28 @@ public class OrdemDeServico {
     private String observacoesTecnicas;
 
     private StatusOrdemServico status;
-
- 
     private Orçamento orcamentoAprovado;
 
-    
+   
+    public OrdemDeServico(Long id,Equipamento equipamento,
+    		String descricaoProblema,LocalDateTime dataAbertura,
+    		LocalDateTime dataFechamentoPrevisto,
+    		LocalDateTime dataFechamentoReal,StatusOrdemServico status
+    ) {
 
-    public OrdemDeServico(Equipamento equipamento,
-                          String descricaoProblema,
-                          LocalDateTime dataFechamentoPrevisto) {
-
-        if (equipamento == null)
-            throw new IllegalArgumentException("Equipamento obrigatório");
-
-        if (dataFechamentoPrevisto == null)
-            throw new IllegalArgumentException("Data prevista obrigatória");
-
+        this.id = id;
         this.equipamento = equipamento;
         this.descricaoProblema = descricaoProblema;
+        this.dataAbertura = dataAbertura;
         this.dataFechamentoPrevisto = dataFechamentoPrevisto;
-
-        this.dataAbertura = LocalDateTime.now();
-        this.status = StatusOrdemServico.PENDENTE;
+        this.dataFechamentoReal = dataFechamentoReal;
+        this.status = status;
     }
-
     
+    
+    
+
+   
 
     public void iniciar(Orçamento orcamento) {
 
@@ -55,14 +52,8 @@ public class OrdemDeServico {
                 "Não é possível iniciar OS sem orçamento aprovado"
             );
 
-        if (orcamento.getOrdemDeServico() == null ||
-            !orcamento.getOrdemDeServico().equals(this))
-            throw new IllegalStateException(
-                "Orçamento não pertence a esta Ordem de Serviço"
-            );
-
         if (status != StatusOrdemServico.PENDENTE)
-            throw new IllegalStateException("OS já iniciada");
+            throw new IllegalStateException("A OS não está pendente");
 
         this.orcamentoAprovado = orcamento;
         this.status = StatusOrdemServico.EM_ANDAMENTO;
@@ -86,8 +77,37 @@ public class OrdemDeServico {
                LocalDateTime.now().isAfter(dataFechamentoPrevisto);
     }
 
-    //  GETTERS E SETTERS 
+    /* =========================
+       VALIDAÇÕES INTERNAS
+       ========================= */
+    private void validarCriacao(Equipamento equipamento,
+                                String descricaoProblema,
+                                LocalDateTime dataFechamentoPrevisto) {
 
+        if (equipamento == null)
+            throw new IllegalArgumentException("Equipamento obrigatório");
+
+        if (descricaoProblema == null || descricaoProblema.isBlank())
+            throw new IllegalArgumentException("Descrição do problema obrigatória");
+
+        if (dataFechamentoPrevisto == null)
+            throw new IllegalArgumentException("Data prevista obrigatória");
+    }
+
+    
+    public boolean estaPendente() {
+        return status == StatusOrdemServico.PENDENTE;
+    }
+
+    public boolean estaEmAndamento() {
+        return status == StatusOrdemServico.EM_ANDAMENTO;
+    }
+
+    public boolean estaConcluida() {
+        return status == StatusOrdemServico.CONCLUIDA;
+    }
+
+   
     public Long getId() {
         return id;
     }
@@ -128,7 +148,57 @@ public class OrdemDeServico {
         return orcamentoAprovado;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+ 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof OrdemDeServico)) return false;
+        OrdemDeServico that = (OrdemDeServico) o;
+        return Objects.equals(id, that.id);
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public void setEquipamento(Equipamento equipamento) {
+		this.equipamento = equipamento;
+	}
+
+	public void setDataAbertura(LocalDateTime dataAbertura) {
+		this.dataAbertura = dataAbertura;
+	}
+
+	public void setDataInicio(LocalDateTime dataInicio) {
+		this.dataInicio = dataInicio;
+	}
+
+	public void setDataFechamentoPrevisto(LocalDateTime dataFechamentoPrevisto) {
+		this.dataFechamentoPrevisto = dataFechamentoPrevisto;
+	}
+
+	public void setDataFechamcentoReal(LocalDateTime dataFechamentoReal) {
+		this.dataFechamentoReal = dataFechamentoReal;
+	}
+
+	public void setDescricaoProblema(String descricaoProblema) {
+		this.descricaoProblema = descricaoProblema;
+	}
+
+	public void setObservacoesTecnicas(String observacoesTecnicas) {
+		this.observacoesTecnicas = observacoesTecnicas;
+	}
+
+	public void setStatus(StatusOrdemServico status) {
+		this.status = status;
+	}
+
+	public void setOrcamentoAprovado(Orçamento orcamentoAprovado) {
+		this.orcamentoAprovado = orcamentoAprovado;
+	}
 }

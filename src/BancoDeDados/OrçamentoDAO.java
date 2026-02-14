@@ -1,7 +1,7 @@
 package BancoDeDados;
 
 import Classe.Orçamento;
-import Classe.OrdemDeServico;
+import Classe.Tecnico;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -9,124 +9,172 @@ import java.util.List;
 
 public class OrçamentoDAO {
 
-    /* =========================
-       SALVAR
-       ========================= */
+    /* ==============================
+       MAPEAMENTO
+       ============================== */
+    private Orçamento criarOrcamentoDoResultSet(ResultSet rs, Tecnico tecnico)
+            throws SQLException {
+
+        Orçamento orcamento = new Orçamento(
+                rs.getString("peca"),
+                rs.getBigDecimal("valor"),
+                rs.getString("tipo_pagamento"),
+                tecnico
+        );
+
+        // controle interno
+        orcamento.setId(rs.getInt("id"));
+
+        // estado
+        Orçamento.Status status =
+                Orçamento.Status.valueOf(rs.getString("status"));
+
+        switch (status) {
+            case APROVADO -> orcamento.aprovar();
+            case REPROVADO -> orcamento.reprovar();
+            case EXPIRADO -> orcamento.expirar();
+            default -> { /* permanece pendente */ }
+        }
+
+        return orcamento;
+    }
+
+    /* ==============================
+       CREATE
+       ============================== */
     public void salvar(Orçamento orcamento) {
 
         String sql = """
             INSERT INTO orcamento
-            (peca, valor, tipo_pagamento, status, ordem_servico_id)
-            VALUES (?, ?, ?, ?, ?)
+            (peca, valor, tipo_pagamento, tecnico_id, status,
+             data_criacao, data_decisao, observacoes)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """;
 
-        try (Connection con = new conect().getConexao();
-             PreparedStatement ps =
-                     con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        conect conexaoObj = new conect();
 
-            ps.setString(1, orcamento.getPeca());
-            ps.setBigDecimal(2, orcamento.getValor());
-            ps.setString(3, orcamento.getTipoPagamento());
-            ps.setString(4, orcamento.getStatus().name());
-            ps.setLong(5, orcamento.getOrdemDeServico().getId());
+        try (Connection conn = conexaoObj.getConexao();
+             PreparedStatement stmt =
+                     conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            ps.executeUpdate();
+            stmt.setString(1, orcamento.getPeca());
+            stmt.setBigDecimal(2, orcamento.getValor());
+            stmt.setString(3, orcamento.getTipoPagamento());
+            stmt.setLong(4, orcamento.getTecnicoResponsavel().getId());
+            stmt.setString(5, orcamento.getStatus().name());
+            stmt.setTimestamp(6, Timestamp.valueOf(orcamento.getDataCriacao()));
+            stmt.setTimestamp(7,
+                    orcamento.getDataDecisao() == null
+                            ? null
+                            : Timestamp.valueOf(orcamento.getDataDecisao()));
+            stmt.setString(8, orcamento.getObservacoes());
 
-            ResultSet rs = ps.getGeneratedKeys();
-            if (rs.next()) {
-                orcamento.setIdOrcamento(rs.getLong(1));
+            stmt.executeUpdate();
+
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    orcamento.setId(rs.getInt(1));
+                }
             }
 
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao salvar orçamento", e);
+        } finally {
+            conexaoObj.fecharConexao();
         }
     }
 
-    /* =========================
-       ATUALIZAR STATUS
-       ========================= */
-    public void atualizarStatus(Orçamento orcamento) {
+    /* ==============================
+       UPDATE (STATUS)
+       ============================== */
+    public void atualizarEstado(Orçamento orcamento) {
 
         String sql = """
             UPDATE orcamento
-            SET status = ?
+            SET status = ?, data_decisao = ?, observacoes = ?
             WHERE id = ?
         """;
 
-        try (Connection con = new conect().getConexao();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        conect conexaoObj = new conect();
 
-            ps.setString(1, orcamento.getStatus().name());
-            ps.setLong(2, orcamento.getIdOrcamento());
+        try (Connection conn = conexaoObj.getConexao();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            ps.executeUpdate();
+            stmt.setString(1, orcamento.getStatus().name());
+            stmt.setTimestamp(2,
+                    orcamento.getDataDecisao() == null
+                            ? null
+                            : Timestamp.valueOf(orcamento.getDataDecisao()));
+            stmt.setString(3, orcamento.getObservacoes());
+            stmt.setLong(4, orcamento.getId());
+
+            stmt.executeUpdate();
 
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao atualizar status do orçamento", e);
+            throw new RuntimeException("Erro ao atualizar orçamento", e);
+        } finally {
+            conexaoObj.fecharConexao();
         }
     }
 
-    /* =========================
-       BUSCAR POR ID
-       ========================= */
-    public Orçamento buscarPorId(Long id, OrdemDeServico os) {
+    /* ==============================
+       READ
+       ============================== */
+    public Orçamento buscarPorId(Long id, Tecnico tecnico) {
 
         String sql = "SELECT * FROM orcamento WHERE id = ?";
 
-        try (Connection con = new conect().getConexao();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        conect conexaoObj = new conect();
 
-            ps.setLong(1, id);
-            ResultSet rs = ps.executeQuery();
+        try (Connection conn = conexaoObj.getConexao();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            if (rs.next()) {
-                return mapear(rs, os);
+            stmt.setLong(1, id);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return criarOrcamentoDoResultSet(rs, tecnico);
+                }
             }
 
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao buscar orçamento", e);
+        } finally {
+            conexaoObj.fecharConexao();
         }
 
         return null;
     }
 
-    /* =========================
-       LISTAR POR OS
-       ========================= */
-    public List<Orçamento> listarPorOrdemServico(OrdemDeServico os) {
+    public List<Orçamento> listarPorTecnico(Tecnico tecnico) {
 
-        String sql = "SELECT * FROM orcamento WHERE ordem_servico_id = ?";
         List<Orçamento> lista = new ArrayList<>();
 
-        try (Connection con = new conect().getConexao();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        String sql = """
+            SELECT * FROM orcamento
+            WHERE tecnico_id = ?
+            ORDER BY data_criacao DESC
+        """;
 
-            ps.setLong(1, os.getId());
-            ResultSet rs = ps.executeQuery();
+        conect conexaoObj = new conect();
 
-            while (rs.next()) {
-                lista.add(mapear(rs, os));
+        try (Connection conn = conexaoObj.getConexao();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setLong(1, tecnico.getId());
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(criarOrcamentoDoResultSet(rs, tecnico));
+                }
             }
 
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao listar orçamentos", e);
+        } finally {
+            conexaoObj.fecharConexao();
         }
 
         return lista;
-    }
-
-    /* =========================
-       APOIO
-       ========================= */
-    private Orçamento mapear(ResultSet rs, OrdemDeServico os) throws SQLException {
-
-        return new Orçamento(
-                rs.getLong("id"),
-                rs.getString("peca"),
-                rs.getBigDecimal("valor"),
-                rs.getString("tipo_pagamento"),
-                Orçamento.StatusOrcamento.valueOf(rs.getString("status")),
-                os
-        );
     }
 }
