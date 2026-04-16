@@ -5,8 +5,8 @@ import Exception.InvalidArgumentException;
 public class ClienteFisica extends Cliente {
     private String cpf;
 
-    public ClienteFisica(String nome, String telefone, String email, String cpf) throws InvalidArgumentException {
-        super(nome, telefone, email);
+    public ClienteFisica(String nome, String telefone, String email,String Cidade, String CEP, String cpf) throws InvalidArgumentException {
+        super(nome, telefone, email, Cidade, CEP);
         this.setCpf(cpf);
     }
 

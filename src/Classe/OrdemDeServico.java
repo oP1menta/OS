@@ -37,11 +37,6 @@ public class OrdemDeServico {
         this.status = status;
     }
     
-    
-    
-
-   
-
     public void iniciar(Orçamento orcamento) {
 
         if (orcamento == null)

@@ -11,7 +11,7 @@ import Factory.Fac;
 public class EquipamentoDAO {
 
 
-    private Equipamento montar(ResultSet rs)
+    private Equipamento criarEquipamentoResulset(ResultSet rs)
             throws SQLException, InvalidArgumentException {
 
         Equipamento eq = Fac.getInstancia().criarEquipamento(
@@ -79,7 +79,7 @@ public class EquipamentoDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    lista.add(montar(rs));
+                    lista.add(criarEquipamentoResulset(rs));
                 }
             }
 
@@ -106,7 +106,7 @@ public class EquipamentoDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return montar(rs);
+                    return criarEquipamentoResulset(rs);
                 }
             }
 
@@ -134,7 +134,7 @@ public class EquipamentoDAO {
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                lista.add(montar(rs));
+                lista.add(criarEquipamentoResulset(rs));
             }
 
         } catch (SQLException | InvalidArgumentException e) {
@@ -150,14 +150,14 @@ public class EquipamentoDAO {
 
     public void deletar(int id) {
 
-        String sql = "DELETE FROM equipamento WHERE id = ?";
+        String sql = "DELETE FROM equipamento WHERE id = ? ";
 
         conect conexaoObj = new conect();
 
         try (Connection con = conexaoObj.getConexao();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setInt(1, id);
+            ps.setInt(1 , id);
             ps.executeUpdate();
 
         } catch (SQLException e) {
@@ -169,22 +169,4 @@ public class EquipamentoDAO {
 
 
 
-    public void desativar(int id) {
-
-        String sql = "UPDATE equipamento SET ativo = FALSE WHERE id = ?";
-
-        conect conexaoObj = new conect();
-
-        try (Connection con = conexaoObj.getConexao();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setInt(1, id);
-            ps.executeUpdate();
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Erro ao desativar equipamento", e);
-        } finally {
-            conexaoObj.fecharConexao();
-        }
-    }
 }
