@@ -2,11 +2,12 @@ package Classe;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class Orçamento {
 
-   
     public enum Status {
         PENDENTE,
         APROVADO,
@@ -15,55 +16,47 @@ public class Orçamento {
     }
 
     private int id;
-    private String peca;
-    private BigDecimal valor;
+    private List<ItemOrcamento> itens;
     private String tipoPagamento;
     private Tecnico tecnicoResponsavel;
-
+    private BigDecimal Mão_de_obra;
     private Status status;
     private LocalDateTime dataCriacao;
     private LocalDateTime dataDecisao;
     private String observacoes;
 
-    
-    public Orçamento(String peca,
-                     BigDecimal valor,
-                     String tipoPagamento, Tecnico tecnicoResponsavel) {
+    public Orçamento(List<ItemOrcamento> itens,
+                     String tipoPagamento,
+                     Tecnico tecnicoResponsavel,
+                     BigDecimal Mão_de_obra) {
 
-      
-
-        this.setPeca (peca.trim());
-        this.setValor (valor);
-        this.setTipoPagamento ( tipoPagamento.trim());
-        this.setTecnicoResponsavel (tecnicoResponsavel);
-
+        if (itens == null || itens.isEmpty())
+            throw new IllegalArgumentException("O orçamento deve ter ao menos uma peça");
+        this.itens = new ArrayList<>(itens);
+        this.setTipoPagamento(tipoPagamento.trim());
+        this.setTecnicoResponsavel(tecnicoResponsavel);
+        this.setMão_de_obra(Mão_de_obra);
         this.setStatus(Status.PENDENTE);
-        this.setDataCriacao (LocalDateTime.now());
+        this.setDataCriacao(LocalDateTime.now());
     }
-
-    
 
     public void aprovar() {
         garantirEstadoPendente();
-        this.setStatus (Status.APROVADO);
+        this.setStatus(Status.APROVADO);
         this.setDataDecisao(LocalDateTime.now());
     }
 
     public void reprovar() {
         garantirEstadoPendente();
-        this.setStatus (Status.REPROVADO);
-        this.setDataDecisao (LocalDateTime.now());
-    }
-
-    public void expirar() {
-        if (getStatus() == Status.APROVADO)
-            throw new IllegalStateException("Orçamento aprovado não pode expirar");
-
-        this.setStatus ( Status.EXPIRADO);
+        this.setStatus(Status.REPROVADO);
         this.setDataDecisao(LocalDateTime.now());
     }
 
-   
+    public BigDecimal getValorTotalPecas() {
+        return itens.stream()
+                    .map(ItemOrcamento::getValor)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 
     private void garantirEstadoPendente() {
         if (getStatus() != Status.PENDENTE) {
@@ -73,64 +66,48 @@ public class Orçamento {
         }
     }
 
-    
-       
+    public boolean estaPendente()  { return status == Status.PENDENTE;  }
+    public boolean estaAprovado()  { return status == Status.APROVADO;  }
+    public boolean estaReprovado() { return status == Status.REPROVADO; }
 
-        
-    
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    
-
-    public boolean estaPendente() {
-        return status == Status.PENDENTE;
+    public List<ItemOrcamento> getItens() { return itens; }
+    public void setItens(List<ItemOrcamento> itens) {
+        if (itens == null || itens.isEmpty())
+            throw new IllegalArgumentException("O orçamento deve ter ao menos uma peça");
+        this.itens = new ArrayList<>(itens);
     }
 
-    public boolean estaAprovado() {
-        return status == Status.APROVADO;
+    public String getTipoPagamento() { return tipoPagamento; }
+    public void setTipoPagamento(String tipoPagamento) {
+        if (tipoPagamento == null || tipoPagamento.isBlank())
+            throw new IllegalArgumentException("Tipo de pagamento é obrigatório");
+        this.tipoPagamento = tipoPagamento;
     }
 
-    public boolean estaReprovado() {
-        return status == Status.REPROVADO;
+    public Tecnico getTecnicoResponsavel() { return tecnicoResponsavel; }
+    public void setTecnicoResponsavel(Tecnico tecnicoResponsavel) {
+        if (tecnicoResponsavel == null)
+            throw new IllegalArgumentException("Técnico responsável é obrigatório");
+        this.tecnicoResponsavel = tecnicoResponsavel;
     }
 
-  
-    public int getId() {
-        return id;
-    }
+    public Status getStatus() { return status; }
+    public void setStatus(Status status) { this.status = status; }
 
-    public String getPeca() {
-        return peca;
-    }
+    public LocalDateTime getDataCriacao() { return dataCriacao; }
+    public void setDataCriacao(LocalDateTime dataCriacao) { this.dataCriacao = dataCriacao; }
 
-    public BigDecimal getValor() {
-        return valor;
-    }
+    public LocalDateTime getDataDecisao() { return dataDecisao; }
+    public void setDataDecisao(LocalDateTime dataDecisao) { this.dataDecisao = dataDecisao; }
 
-    public String getTipoPagamento() {
-        return tipoPagamento;
-    }
+    public String getObservacoes() { return observacoes; }
+    public void setObservacoes(String observacoes) { this.observacoes = observacoes; }
 
-    public Tecnico getTecnicoResponsavel() {
-        return tecnicoResponsavel;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public LocalDateTime getDataCriacao() {
-        return dataCriacao;
-    }
-
-    public LocalDateTime getDataDecisao() {
-        return dataDecisao;
-    }
-
-    public String getObservacoes() {
-        return observacoes;
-    }
-
-    
+    public BigDecimal getMão_de_obra() { return Mão_de_obra; }
+    public void setMão_de_obra(BigDecimal mão_de_obra) { Mão_de_obra = mão_de_obra; }
 
     @Override
     public boolean equals(Object o) {
@@ -141,80 +118,13 @@ public class Orçamento {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(id);
+    public int hashCode() { return Objects.hash(id); }
+
+    @Override
+    public String toString() {
+        return "Técnico: " + getTecnicoResponsavel()
+            + " | Peças: " + itens.size()
+            + " | Total peças: R$" + getValorTotalPecas()
+            + " | " + getStatus();
     }
-
-
-
-	public void setId(int id) {
-		this.id = id;
-	}
-
-
-
-	public void setPeca(String peca) {
-		 if (peca == null || peca.isBlank())
-	            throw new IllegalArgumentException("Peça é obrigatória");
-		 else
-			 this.peca = peca;
-	}
-
-
-
-	public void setValor(BigDecimal valor) {
-		 if (valor == null || valor.compareTo(BigDecimal.ZERO) <= 0)
-	            throw new IllegalArgumentException("Valor deve ser maior que zero");
-		 else
-		this.valor = valor;
-	}
-
-
-
-	public void setTipoPagamento(String tipoPagamento) {
-		if (tipoPagamento == null || tipoPagamento.isBlank())
-            throw new IllegalArgumentException("Tipo de pagamento é obrigatório");
-		else	
-		this.tipoPagamento = tipoPagamento;
-	}
-	
-
-
-	public void setTecnicoResponsavel(Tecnico tecnicoResponsavel) {
-		if (tecnicoResponsavel == null)
-	        throw new IllegalArgumentException("Técnico responsável é obrigatório");	
-		else
-		this.tecnicoResponsavel = tecnicoResponsavel;
-	}
-
-
-
-	public void setStatus(Status status) {
-		this.status = status;
-	}
-
-
-
-	public void setDataCriacao(LocalDateTime dataCriacao) {
-		this.dataCriacao = dataCriacao;
-	}
-
-
-
-	public void setDataDecisao(LocalDateTime dataDecisao) {
-		this.dataDecisao = dataDecisao;
-	}
-
-
-
-	public void setObservacoes(String observacoes) {
-		this.observacoes = observacoes;
-	}
-	
-	
-	public String toString() {
-		return "Tecnico Responsavel: " + getTecnicoResponsavel() + "\n Data Criação " + getDataCriacao() + 
-				"\n Peça: " + getPeca() + " \nValor: $" + getValor();
-	 } 
-	
 }

@@ -9,8 +9,12 @@ public class Equipamento {
     private String modelo;
     private String documentoCliente;
     private Boolean ativo;
+    private Cliente cliente;
 
+    
     public Equipamento(String nome, String modelo, String documentoCliente) {
+    	
+    
         setNome(nome);
         try {
 			setModelo(modelo);
@@ -24,22 +28,28 @@ public class Equipamento {
 
   
     public Equipamento(int id, String nome, String modelo, String documentoCliente, Boolean ativo)
-            {
+    {
 
-        try {
-			setId(id);
-		} catch (InvalidArgumentException e) {
-			e.printStackTrace();
-		}
-        setNome(nome);
-        try {
-			setModelo(modelo);
-		} catch (InvalidArgumentException e) {
-						e.printStackTrace();
-		}
-        this.documentoCliente = documentoCliente;
-        this.ativo = ativo;
-    }
+try {
+    setId(id);
+
+} catch (InvalidArgumentException e) {
+    e.printStackTrace();
+}
+
+setNome(nome);
+
+try {
+    setModelo(modelo);
+} catch (InvalidArgumentException e) {
+    e.printStackTrace();
+}
+
+this.setDocumentoCliente(documentoCliente);
+
+this.setAtivo(ativo);
+}
+
 
  
 
@@ -50,6 +60,7 @@ public class Equipamento {
     }
 
     public void setNome(String nome) {
+    	
         this.nome = nome;
     }
 

@@ -10,7 +10,6 @@ import Factory.Fac;
 
 public class ClienteDAO {
 
-
     private Cliente criarClienteDoResultSet(ResultSet rs)
             throws SQLException, InvalidArgumentException {
 
@@ -20,6 +19,8 @@ public class ClienteDAO {
                 rs.getString("nome"),
                 rs.getString("telefone"),
                 rs.getString("email"),
+                rs.getString("cidade"),
+                rs.getString("cep"),
                 rs.getString("documento")
         );
 
@@ -27,12 +28,11 @@ public class ClienteDAO {
         return cliente;
     }
 
-
     public void salvarcliente(Cliente cliente) {
 
         String sql = """
-            INSERT INTO cliente (documento, nome, telefone, email, ativo)
-            VALUES (?, ?, ?, ?, TRUE)
+            INSERT INTO cliente (documento, nome, telefone, email, cidade, cep, ativo)
+            VALUES (?, ?, ?, ?, ?, ?, TRUE)
         """;
 
         conect conexaoObj = new conect();
@@ -44,24 +44,25 @@ public class ClienteDAO {
             stmt.setString(2, cliente.getNome());
             stmt.setString(3, cliente.getTelefone());
             stmt.setString(4, cliente.getEmail());
+            stmt.setString(5, cliente.getCidade());
+            stmt.setString(6, cliente.getCEP());
 
             stmt.executeUpdate();
 
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao salvar cliente", e);
         } finally {
-        	if(conexaoObj != null)
-        		conexaoObj.fecharConexao();
+            if (conexaoObj != null) {
+                conexaoObj.fecharConexao();
+            }
         }
     }
-
-    //UPDATE 
 
     public void atualizar(Cliente cliente) {
 
         String sql = """
             UPDATE cliente
-            SET nome = ?, telefone = ?, email = ?
+            SET nome = ?, telefone = ?, email = ?, cidade = ?, cep = ?
             WHERE documento = ?
         """;
 
@@ -73,18 +74,20 @@ public class ClienteDAO {
             stmt.setString(1, cliente.getNome());
             stmt.setString(2, cliente.getTelefone());
             stmt.setString(3, cliente.getEmail());
-            stmt.setString(4, cliente.getDocumento());
+            stmt.setString(4, cliente.getCidade());
+            stmt.setString(5, cliente.getCEP());
+            stmt.setString(6, cliente.getDocumento());
 
             stmt.executeUpdate();
 
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao atualizar cliente", e);
         } finally {
-        	if(conexaoObj != null)
-        		conexaoObj.fecharConexao();
+            if (conexaoObj != null) {
+                conexaoObj.fecharConexao();
+            }
         }
     }
-
 
     public Cliente buscarPorDocumento(String documento) {
 
@@ -106,13 +109,13 @@ public class ClienteDAO {
         } catch (SQLException | InvalidArgumentException e) {
             throw new RuntimeException("Erro ao buscar cliente", e);
         } finally {
-        	if(conexaoObj != null)
-        		conexaoObj.fecharConexao();
+            if (conexaoObj != null) {
+                conexaoObj.fecharConexao();
+            }
         }
 
         return null;
     }
-
 
     public List<Cliente> listarPorNome(String nome) {
 
@@ -139,32 +142,13 @@ public class ClienteDAO {
         } catch (SQLException | InvalidArgumentException e) {
             throw new RuntimeException("Erro ao listar clientes", e);
         } finally {
-            conexaoObj.fecharConexao();
+            if (conexaoObj != null) {
+                conexaoObj.fecharConexao();
+            }
         }
 
         return clientes;
     }
-
-
-    public void desativar(String documento) {
-
-        String sql = "UPDATE cliente SET ativo = FALSE WHERE documento = ?";
-
-        conect conexaoObj = new conect();
-
-        try (Connection conn = conexaoObj.getConexao();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, documento);
-            stmt.executeUpdate();
-
-        } catch (SQLException e) {
-            throw new RuntimeException("Erro ao desativar cliente", e);
-        } finally {
-            conexaoObj.fecharConexao();
-        }
-    }
-
 
     public void deletarCliente(String documento) {
 
@@ -180,8 +164,10 @@ public class ClienteDAO {
 
         } catch (SQLException e) {
             throw new RuntimeException("Erro ao excluir cliente", e);
-        }  finally {
-            conexaoObj.fecharConexao();
+        } finally {
+            if (conexaoObj != null) {
+                conexaoObj.fecharConexao();
+            }
         }
     }
 }

@@ -4,6 +4,8 @@ module OJAVA {
     requires java.sql;
     requires javafx.graphics;
     requires javafx.base;
+    requires com.github.librepdf.openpdf;
+	requires java.desktop;
 
     // Esta linha permite que o JavaFX acesse seus modelos (Cliente, OS, etc.)
     opens Classe to javafx.base;
@@ -16,4 +18,5 @@ module OJAVA {
     exports Classe;
     exports Controller;
     exports BancoDeDados;
+    
 }

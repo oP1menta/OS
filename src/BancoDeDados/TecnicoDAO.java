@@ -89,4 +89,27 @@ public class TecnicoDAO {
 
         return null;
     }
+    public void deletar(int id) {
+
+        String sql = "DELETE FROM tecnico WHERE id = ? ";
+
+        conect conexaoObj = new conect();
+
+        try (Connection conn = conexaoObj.getConexao();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, id);
+
+            int linhas = stmt.executeUpdate();
+
+            if (linhas == 0) {
+                throw new RuntimeException("Nenhum técnico encontrado com esse ID.");
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao deletar técnico", e);
+        } finally {
+            conexaoObj.fecharConexao();
+        }
+    }
 }
