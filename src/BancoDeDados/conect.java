@@ -8,7 +8,7 @@ public class conect {
 
     private final String driver = "org.postgresql.Driver";
     private final String user = "postgres";
-    private final String senha = "GodHypnos.66";
+    private final String senha = "Meamome13";
     private final String url = "jdbc:postgresql://localhost:5432/ProjetoIntegradorBD";
 
     private Connection con;
