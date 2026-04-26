@@ -76,6 +76,10 @@ public class Controller {
         );
         MainView.setClientesProvider(() -> listarClientesPorNome(""));
 
+        // ── NOVOS: providers para a hierarquia na tela de Clientes ────────────
+        MainView.setEquipamentosPorClienteProvider(c -> listarEquipamentosPorCliente(c.getDocumento()));
+        MainView.setOrcamentosPorEquipamentoProvider(eq -> orcamentoDAO.listarPorEquipamento(eq.getId()));
+
         MainView.setSalvarEquipamentoHandler((nome, modelo, documentoCliente) ->
             cadastrarEquipamento(nome, modelo, documentoCliente)
         );

@@ -238,6 +238,50 @@ public class OrçamentoDAO {
         return lista;
     }
 
+    // ── NOVO: busca orçamentos vinculados às OS de um equipamento ──────────────
+    public List<Orçamento> listarPorEquipamento(int equipamentoId) {
+
+        List<Orçamento> lista = new ArrayList<>();
+
+        String sql = """
+            SELECT DISTINCT
+                o.id, o.tipo_pagamento, o.status,
+                o.data_criacao, o.data_decisao, o.observacoes, o.valor_mao_de_obra,
+                t.id AS tecnico_id, t.nome AS tecnico_nome,
+                t.documento AS tecnico_documento,
+                t.data_associacao AS tecnico_data_associacao
+            FROM orcamento o
+            JOIN tecnico t ON t.id = o.tecnico_id
+            JOIN ordem_de_servico os ON os.orcamento_id = o.id
+            WHERE os.equipamento_id = ?
+            ORDER BY o.data_criacao DESC
+        """;
+
+        conect conexaoObj = new conect();
+
+        try (Connection conn = conexaoObj.getConexao();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, equipamentoId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Tecnico tecnico = criarTecnico(rs);
+                    Orçamento orc = criarOrcamentoDoResultSet(rs, tecnico);
+                    orc.setItens(buscarItens(conn, orc.getId()));
+                    lista.add(orc);
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao listar orçamentos por equipamento", e);
+        } finally {
+            conexaoObj.fecharConexao();
+        }
+
+        return lista;
+    }
+
     private List<ItemOrcamento> buscarItens(Connection conn, int orcamentoId) throws SQLException {
 
         List<ItemOrcamento> itens = new ArrayList<>();
@@ -265,8 +309,6 @@ public class OrçamentoDAO {
         BigDecimal valorMaoDeObra = rs.getBigDecimal("valor_mao_de_obra");
         if (valorMaoDeObra == null) valorMaoDeObra = BigDecimal.ZERO;
 
-        // Placeholder para passar a validação do construtor;
-        // os itens reais são injetados logo após via setItens()
         List<ItemOrcamento> placeholder = new ArrayList<>();
         placeholder.add(new ItemOrcamento("carregando", BigDecimal.ONE));
 

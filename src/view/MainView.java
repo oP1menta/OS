@@ -55,6 +55,8 @@ public class MainView extends Application {
     private static DeletarTecnicoHandler DELETAR_TECNICO_HANDLER;
     private static ExportarOrcamentoPdfHandler EXPORTAR_ORCAMENTO_PDF_HANDLER;
     private static ExportarOsPdfHandler EXPORTAR_OS_PDF_HANDLER;
+    private static OrcamentosPorEquipamentoProvider ORCAMENTOS_POR_EQUIPAMENTO_PROVIDER;
+    private static EquipamentosPorClienteProvider EQUIPAMENTOS_POR_CLIENTE_PROVIDER;
 
     private enum DashboardFiltro { ATRASADAS, EM_ANDAMENTO, CONCLUIDAS }
 
@@ -80,6 +82,8 @@ public class MainView extends Application {
     @FunctionalInterface public interface DeletarClienteHandler { void deletar(String documento) throws Exception; }
     @FunctionalInterface public interface ExportarOrcamentoPdfHandler { void exportar(Orçamento orcamento) throws Exception; }
     @FunctionalInterface public interface ExportarOsPdfHandler { void exportar(Orçamento orcamento, OrdemDeServico ordemDeServico) throws Exception; }
+    @FunctionalInterface public interface OrcamentosPorEquipamentoProvider { List<Orçamento> listarPorEquipamento(Equipamento equipamento) throws Exception; }
+    @FunctionalInterface public interface EquipamentosPorClienteProvider { List<Equipamento> listarPorCliente(Cliente cliente) throws Exception; }
 
     public static void setLoginHandler(LoginHandler handler)                         { LOGIN_HANDLER = handler; }
     public static void setDashboardProvider(DashboardDataProvider provider)          { DASHBOARD_PROVIDER = provider; }
@@ -103,9 +107,11 @@ public class MainView extends Application {
     public static void setCadastrarTecnicoHandler(CadastrarTecnicoHandler h)         { CADASTRAR_TECNICO_HANDLER = h; }
     public static void setExportarOrcamentoPdfHandler(ExportarOrcamentoPdfHandler h) { EXPORTAR_ORCAMENTO_PDF_HANDLER = h; }
     public static void setExportarOsPdfHandler(ExportarOsPdfHandler h)               { EXPORTAR_OS_PDF_HANDLER = h; }
+    public static void setOrcamentosPorEquipamentoProvider(OrcamentosPorEquipamentoProvider p) { ORCAMENTOS_POR_EQUIPAMENTO_PROVIDER = p; }
+    public static void setEquipamentosPorClienteProvider(EquipamentosPorClienteProvider p)     { EQUIPAMENTOS_POR_CLIENTE_PROVIDER = p; }
 
     // ══════════════════════════════════════════════════════════════════════
-    // CARD AUXILIAR GENÉRICO (clientes, técnicos, equipamentos, orçamentos)
+    // CARD AUXILIAR GENÉRICO
     // ══════════════════════════════════════════════════════════════════════
 
     private VBox listCard(String iconText, String titulo, String... detalhes) {
@@ -161,7 +167,6 @@ public class MainView extends Application {
             }
         }
 
-        // Badge colorido de status
         Label badge = new Label(badgeText);
         badge.setStyle(
             "-fx-background-color:" + badgeBg + ";" +
@@ -172,7 +177,6 @@ public class MainView extends Application {
             "-fx-background-radius:20;"
         );
 
-        // ID da OS
         Label osId = new Label("OS #" + os.getId());
         osId.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
         osId.setStyle("-fx-text-fill:#1e293b;");
@@ -180,26 +184,20 @@ public class MainView extends Application {
         HBox tituloRow = new HBox(10, osId, badge);
         tituloRow.setAlignment(Pos.CENTER_LEFT);
 
-        // Equipamento
         String nomeEq = (os.getEquipamento() != null) ? os.getEquipamento().getNome() : "-";
         Label equipLabel = new Label("🖥️  " + nomeEq);
         equipLabel.setStyle("-fx-text-fill:#374151; -fx-font-size:12px;");
 
-        // Datas
-        String abertura = os.getDataAbertura() == null           ? "-" : os.getDataAbertura().format(DT_FMT);
-        String previsto = os.getDataFechamentoPrevisto() == null  ? "-" : os.getDataFechamentoPrevisto().format(DT_FMT);
-        String Concluida = os.getDataFechamentoReal() == null  ? "-" : os.getDataFechamentoReal().format(DT_FMT);
+        String abertura  = os.getDataAbertura()          == null ? "-" : os.getDataAbertura().format(DT_FMT);
+        String previsto  = os.getDataFechamentoPrevisto() == null ? "-" : os.getDataFechamentoPrevisto().format(DT_FMT);
+        String concluida = os.getDataFechamentoReal()     == null ? "-" : os.getDataFechamentoReal().format(DT_FMT);
 
-        Label lblAbertura = new Label("📅 Abertura: " + abertura);
-        lblAbertura.setStyle("-fx-text-fill:#6b7280; -fx-font-size:10cpx;");
-
-        Label lblPrevisto = new Label("⏰ Previsto:  " + previsto);
+        Label lblAbertura  = new Label("📅 Abertura: " + abertura);
+        lblAbertura.setStyle("-fx-text-fill:#6b7280; -fx-font-size:10px;");
+        Label lblPrevisto  = new Label("⏰ Previsto:  " + previsto);
         lblPrevisto.setStyle("-fx-text-fill:#6b7280; -fx-font-size:10px;");
-        
-        Label lblConcluida = new Label("✅ Concluidas:  " + Concluida);
+        Label lblConcluida = new Label("✅ Concluída: " + concluida);
         lblConcluida.setStyle("-fx-text-fill:#6b7280; -fx-font-size:10px;");
-        
-        
 
         HBox datasRow = new HBox(20, lblAbertura, lblPrevisto, lblConcluida);
 
@@ -359,7 +357,6 @@ public class MainView extends Application {
         return b;
     }
 
-    // ── Drawer com cards profissionais ─────────────────────────────────────
     private Node buildOsCardsDrawer(String titulo, DashboardFiltro filtro, List<OrdemDeServico> todas) {
 
         String cor = switch (filtro) {
@@ -368,7 +365,6 @@ public class MainView extends Application {
             case CONCLUIDAS   -> "#16a34a";
         };
 
-        // Cabeçalho
         Label tituloLabel = title(titulo, 18);
         tituloLabel.setStyle("-fx-text-fill:" + cor + ";");
 
@@ -388,12 +384,10 @@ public class MainView extends Application {
         HBox header = new HBox(10, tituloLabel, spacer, fechar);
         header.setAlignment(Pos.CENTER_LEFT);
 
-        // Contador
         List<OrdemDeServico> filtradas = filtrarDashboard(todas, filtro);
         Label contador = new Label(filtradas.size() + " ordem(ns) encontrada(s)");
         contador.setStyle("-fx-text-fill:#9ca3af; -fx-font-size:12px;");
 
-        // Lista de cards
         VBox listaCards = new VBox(10);
 
         if (filtradas.isEmpty()) {
@@ -404,7 +398,6 @@ public class MainView extends Application {
             for (OrdemDeServico os : filtradas) {
                 VBox card = osCard(os, filtro);
 
-                // Botão "Concluir" somente para EM_ANDAMENTO
                 if (filtro == DashboardFiltro.EM_ANDAMENTO && CONCLUIR_OS_HANDLER != null) {
                     Button btnConcluir = new Button("✔  Concluir OS");
                     btnConcluir.setStyle(
@@ -623,7 +616,7 @@ public class MainView extends Application {
             try {
                 if (CRIAR_ORCAMENTO_HANDLER == null) return;
                 Tecnico t = tecnicos.getValue();
-                if (t == null)                   throw new IllegalArgumentException("Selecione um técnico");
+                if (t == null)                    throw new IllegalArgumentException("Selecione um técnico");
                 if (maodeObra.getText().isBlank()) throw new IllegalArgumentException("Informe o valor da mão de obra");
                 if (pagamento.getText().isBlank()) throw new IllegalArgumentException("Informe o tipo de pagamento");
 
@@ -702,9 +695,7 @@ public class MainView extends Application {
         exportarPdf.setOnAction(e -> {
             try {
                 Orçamento orcSel = lista.getSelectionModel().getSelectedItem();
-                Tecnico   tecSel = tecnicos.getValue();
                 if (orcSel == null) throw new IllegalArgumentException("Selecione um orçamento para exportar");
-                if (tecSel == null) throw new IllegalArgumentException("Selecione um técnico");
                 if (EXPORTAR_ORCAMENTO_PDF_HANDLER == null) { alert("Exportar PDF", "Handler não configurado."); return; }
                 alert("Exportar PDF", "PDF baixado com sucesso em C:\\Programing\\OS");
                 EXPORTAR_ORCAMENTO_PDF_HANDLER.exportar(orcSel);
@@ -725,14 +716,14 @@ public class MainView extends Application {
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // CLIENTES
+    // CLIENTES  ← tela refatorada com hierarquia expansível
     // ══════════════════════════════════════════════════════════════════════
 
     private VBox cliente() {
         VBox v = page();
 
         Label titulo = title("Clientes", 22);
-        Label sub    = subtitle("Cadastro e listagem de clientes do sistema");
+        Label sub    = subtitle("Cadastro e listagem de clientes · clique em um cliente para ver equipamentos, orçamentos e OS");
 
         TextField nome      = input("Nome");
         TextField telefone  = input("Telefone");
@@ -742,9 +733,17 @@ public class MainView extends Application {
         TextField documento = input("CPF / CNPJ");
         Button salvar  = primary("Salvar Cliente");
         Button deletar = primary("Deletar Cliente");
+        deletar.setDisable(true);
 
+        // painel de detalhe hierárquico (direita)
+        VBox detalhePane = new VBox(10);
+        detalhePane.setPadding(new Insets(0, 0, 0, 8));
+        detalhePane.setVisible(false);
+        detalhePane.setManaged(false);
+
+        // lista de clientes (esquerda)
         ListView<Cliente> lista = new ListView<>();
-        lista.setPrefHeight(450);
+        lista.setPrefHeight(500);
         lista.setStyle("-fx-background-color:transparent; -fx-border-color:transparent;");
 
         lista.setCellFactory(lv -> new ListCell<>() {
@@ -761,6 +760,190 @@ public class MainView extends Application {
             }
         });
 
+        // ao selecionar cliente → monta painel hierárquico
+        lista.getSelectionModel().selectedItemProperty().addListener((obs, old, clienteSel) -> {
+            deletar.setDisable(clienteSel == null || DELETAR_CLIENTE_HANDLER == null);
+            detalhePane.getChildren().clear();
+
+            if (clienteSel == null) {
+                detalhePane.setVisible(false);
+                detalhePane.setManaged(false);
+                return;
+            }
+
+            detalhePane.setVisible(true);
+            detalhePane.setManaged(true);
+
+            // cabeçalho do cliente
+            Label clienteTitulo = new Label("👤  " + clienteSel.getNome());
+            clienteTitulo.setFont(Font.font("Segoe UI", FontWeight.BOLD, 15));
+            clienteTitulo.setStyle("-fx-text-fill:#9B111E;");
+
+            String cidadeStr = clienteSel.getCidade() != null && !clienteSel.getCidade().isBlank()
+                ? "   📍 " + clienteSel.getCidade() : "";
+            Label clienteDoc = new Label("📄  " + clienteSel.getDocumento() + cidadeStr);
+            clienteDoc.setStyle("-fx-text-fill:#6b7280; -fx-font-size:12px;");
+
+            detalhePane.getChildren().addAll(new Separator(), clienteTitulo, clienteDoc);
+
+            // buscar equipamentos do cliente
+            List<Equipamento> equipamentos = new java.util.ArrayList<>();
+            if (EQUIPAMENTOS_POR_CLIENTE_PROVIDER != null) {
+                try { equipamentos = EQUIPAMENTOS_POR_CLIENTE_PROVIDER.listarPorCliente(clienteSel); }
+                catch (Exception ex) { alert("Erro", "Erro ao carregar equipamentos: " + ex.getMessage()); }
+            }
+
+            if (equipamentos.isEmpty()) {
+                Label semEq = new Label("   Nenhum equipamento cadastrado para este cliente.");
+                semEq.setStyle("-fx-text-fill:#9ca3af; -fx-font-size:12px; -fx-padding:6 0 0 8;");
+                detalhePane.getChildren().add(semEq);
+                return;
+            }
+
+            // para cada equipamento → acordeão clicável
+            for (Equipamento eq : equipamentos) {
+
+                Label eqLabel = new Label("🖥️  " + eq.getNome() + "   |   🔧 " + eq.getModelo());
+                eqLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
+                eqLabel.setStyle("-fx-text-fill:#1e293b;");
+
+                VBox orcamentosContainer = new VBox(6);
+                orcamentosContainer.setPadding(new Insets(4, 0, 4, 20));
+                orcamentosContainer.setVisible(false);
+                orcamentosContainer.setManaged(false);
+
+                Label seta = new Label("▶");
+                seta.setStyle("-fx-text-fill:#9B111E; -fx-font-size:11px;");
+
+                HBox eqHeader = new HBox(8, seta, eqLabel);
+                eqHeader.setAlignment(Pos.CENTER_LEFT);
+                eqHeader.setPadding(new Insets(8, 12, 8, 8));
+                eqHeader.setStyle("-fx-background-color:#f1f5f9;-fx-border-color:#e2e8f0;-fx-border-radius:6;-fx-background-radius:6;-fx-cursor:hand;");
+                eqHeader.setOnMouseEntered(e -> eqHeader.setStyle("-fx-background-color:#e2e8f0;-fx-border-color:#9B111E;-fx-border-radius:6;-fx-background-radius:6;-fx-cursor:hand;"));
+                eqHeader.setOnMouseExited (e -> eqHeader.setStyle("-fx-background-color:#f1f5f9;-fx-border-color:#e2e8f0;-fx-border-radius:6;-fx-background-radius:6;-fx-cursor:hand;"));
+
+                eqHeader.setOnMouseClicked(e -> {
+                    boolean aberto = orcamentosContainer.isVisible();
+                    if (!aberto) {
+                        orcamentosContainer.getChildren().clear();
+
+                        // buscar orçamentos do equipamento
+                        List<Orçamento> orcamentos = new java.util.ArrayList<>();
+                        if (ORCAMENTOS_POR_EQUIPAMENTO_PROVIDER != null) {
+                            try { orcamentos = ORCAMENTOS_POR_EQUIPAMENTO_PROVIDER.listarPorEquipamento(eq); }
+                            catch (Exception ex) { alert("Erro", "Erro ao carregar orçamentos: " + ex.getMessage()); }
+                        }
+
+                        if (orcamentos.isEmpty()) {
+                            Label semOrc = new Label("      Nenhum orçamento vinculado a este equipamento.");
+                            semOrc.setStyle("-fx-text-fill:#9ca3af; -fx-font-size:12px;");
+                            orcamentosContainer.getChildren().add(semOrc);
+                        } else {
+                            for (Orçamento orc : orcamentos) {
+
+                                String statusEmoji = switch (orc.getStatus()) {
+                                    case APROVADO  -> "✅";
+                                    case REPROVADO -> "❌";
+                                    default        -> "⏳";
+                                };
+                                String tecNome = orc.getTecnicoResponsavel() != null
+                                    ? orc.getTecnicoResponsavel().getNome() : "-";
+
+                                Label orcLabel = new Label(
+                                    statusEmoji + "  Orçamento #" + orc.getId()
+                                    + "   " + orc.getStatus()
+                                    + "   👷 " + tecNome);
+                                orcLabel.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 12));
+                                orcLabel.setStyle("-fx-text-fill:#374151;");
+
+                                Label setaOrc = new Label("▶");
+                                setaOrc.setStyle("-fx-text-fill:#6b7280; -fx-font-size:10px;");
+
+                                VBox osContainer = new VBox(4);
+                                osContainer.setPadding(new Insets(2, 0, 2, 24));
+                                osContainer.setVisible(false);
+                                osContainer.setManaged(false);
+
+                                HBox orcHeader = new HBox(8, setaOrc, orcLabel);
+                                orcHeader.setAlignment(Pos.CENTER_LEFT);
+                                orcHeader.setPadding(new Insets(6, 12, 6, 12));
+                                orcHeader.setStyle("-fx-background-color:#f8fafc;-fx-border-color:#e5e7eb;-fx-border-radius:5;-fx-background-radius:5;-fx-cursor:hand;");
+                                orcHeader.setOnMouseEntered(ev -> orcHeader.setStyle("-fx-background-color:#eff6ff;-fx-border-color:#3b82f6;-fx-border-radius:5;-fx-background-radius:5;-fx-cursor:hand;"));
+                                orcHeader.setOnMouseExited (ev -> orcHeader.setStyle("-fx-background-color:#f8fafc;-fx-border-color:#e5e7eb;-fx-border-radius:5;-fx-background-radius:5;-fx-cursor:hand;"));
+
+                                // ao clicar no orçamento → mostra OS vinculadas
+                                orcHeader.setOnMouseClicked(ev -> {
+                                    boolean orcAberto = osContainer.isVisible();
+                                    if (!orcAberto) {
+                                        osContainer.getChildren().clear();
+
+                                        // buscar todas as OS do equipamento e filtrar pelo orçamento
+                                        List<OrdemDeServico> osList = new java.util.ArrayList<>();
+                                        if (OS_PROVIDER != null) {
+                                            try { osList = OS_PROVIDER.listarOsPorEquipamento(eq); }
+                                            catch (Exception ex) { alert("Erro", "Erro ao carregar OS: " + ex.getMessage()); }
+                                        }
+
+                                        final int orcId = orc.getId();
+                                        List<OrdemDeServico> osFiltrada = osList.stream()
+                                            .filter(os -> os.getOrcamentoAprovado() != null
+                                                       && os.getOrcamentoAprovado().getId() == orcId)
+                                            .toList();
+
+                                        if (osFiltrada.isEmpty()) {
+                                            Label semOs = new Label("         Nenhuma OS vinculada a este orçamento.");
+                                            semOs.setStyle("-fx-text-fill:#9ca3af; -fx-font-size:11px;");
+                                            osContainer.getChildren().add(semOs);
+                                        } else {
+                                            for (OrdemDeServico os : osFiltrada) {
+                                                String osEmoji = switch (os.getStatus()) {
+                                                    case CONCLUIDA    -> "🟢";
+                                                    case EM_ANDAMENTO -> "🔵";
+                                                    default           -> "⚪";
+                                                };
+                                                String dataAb = os.getDataAbertura() != null
+                                                    ? "   📅 " + os.getDataAbertura()
+                                                        .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                                                    : "";
+                                                Label osLabel = new Label(
+                                                    osEmoji + "  OS #" + os.getId()
+                                                    + "   " + os.getStatus() + dataAb);
+                                                osLabel.setStyle(
+                                                    "-fx-text-fill:#374151;" +
+                                                    "-fx-font-size:11px;" +
+                                                    "-fx-background-color:#f0fdf4;" +
+                                                    "-fx-border-color:#bbf7d0;" +
+                                                    "-fx-border-radius:4;" +
+                                                    "-fx-background-radius:4;" +
+                                                    "-fx-padding:4 10;");
+                                                osContainer.getChildren().add(osLabel);
+                                            }
+                                        }
+                                        setaOrc.setText("▼");
+                                    } else {
+                                        setaOrc.setText("▶");
+                                    }
+                                    osContainer.setVisible(!orcAberto);
+                                    osContainer.setManaged(!orcAberto);
+                                });
+
+                                orcamentosContainer.getChildren().addAll(orcHeader, osContainer);
+                            }
+                        }
+                        seta.setText("▼");
+                    } else {
+                        seta.setText("▶");
+                    }
+                    orcamentosContainer.setVisible(!aberto);
+                    orcamentosContainer.setManaged(!aberto);
+                });
+
+                VBox eqBloco = new VBox(4, eqHeader, orcamentosContainer);
+                detalhePane.getChildren().add(eqBloco);
+            }
+        });
+
+        // carregar lista inicial
         try {
             lista.setItems(CLIENTES_PROVIDER != null
                 ? FXCollections.observableArrayList(CLIENTES_PROVIDER.listarClientes())
@@ -771,16 +954,13 @@ public class MainView extends Application {
             try {
                 if (SALVAR_CLIENTE_HANDLER == null) return;
                 String docLimpo = documento.getText() == null ? "" : documento.getText().replaceAll("\\D", "");
-                SALVAR_CLIENTE_HANDLER.salvar(nome.getText(), telefone.getText(), email.getText(), cidade.getText(), cep.getText(), docLimpo);
+                SALVAR_CLIENTE_HANDLER.salvar(nome.getText(), telefone.getText(), email.getText(),
+                    cidade.getText(), cep.getText(), docLimpo);
                 if (CLIENTES_PROVIDER != null)
                     lista.setItems(FXCollections.observableArrayList(CLIENTES_PROVIDER.listarClientes()));
                 nome.clear(); telefone.clear(); email.clear(); cidade.clear(); cep.clear(); documento.clear();
             } catch (Exception ex) { alert("Erro", ex.getMessage()); }
         });
-
-        deletar.setDisable(true);
-        lista.getSelectionModel().selectedItemProperty().addListener((obs, o, n) ->
-            deletar.setDisable(n == null || DELETAR_CLIENTE_HANDLER == null));
 
         deletar.setOnAction(e -> {
             try {
@@ -788,12 +968,25 @@ public class MainView extends Application {
                 Cliente sel = lista.getSelectionModel().getSelectedItem();
                 if (sel == null) throw new IllegalArgumentException("Selecione um cliente");
                 DELETAR_CLIENTE_HANDLER.deletar(sel.getDocumento());
+                detalhePane.setVisible(false);
+                detalhePane.setManaged(false);
+                detalhePane.getChildren().clear();
                 if (CLIENTES_PROVIDER != null)
                     lista.setItems(FXCollections.observableArrayList(CLIENTES_PROVIDER.listarClientes()));
             } catch (Exception ex) { alert("Erro", ex.getMessage()); }
         });
 
-        v.getChildren().addAll(titulo, sub, nome, telefone, email, cidade, cep, documento, salvar, deletar, lista);
+        ScrollPane detalheScroll = new ScrollPane(detalhePane);
+        detalheScroll.setFitToWidth(true);
+        detalheScroll.setStyle("-fx-background:transparent; -fx-background-color:transparent;");
+        detalheScroll.setPrefHeight(500);
+
+        HBox conteudo = new HBox(16, lista, detalheScroll);
+        HBox.setHgrow(lista, Priority.SOMETIMES);
+        HBox.setHgrow(detalheScroll, Priority.ALWAYS);
+        lista.setMaxWidth(340);
+
+        v.getChildren().addAll(titulo, sub, nome, telefone, email, cidade, cep, documento, salvar, deletar, conteudo);
         return v;
     }
 
@@ -974,10 +1167,8 @@ public class MainView extends Application {
         exportarPdf.setOnAction(e -> {
             try {
                 OrdemDeServico osSel  = ordensServico.getValue();
-                Equipamento    eqSel  = equipamentos.getValue();
                 Orçamento      orcSel = orcamentos.getValue();
                 if (osSel == null) throw new IllegalArgumentException("Selecione uma OS para exportar");
-                if (eqSel == null) throw new IllegalArgumentException("Selecione um equipamento");
                 if (EXPORTAR_OS_PDF_HANDLER == null) { alert("Exportar PDF", "Handler não configurado."); return; }
                 if (EXPORTAR_ORCAMENTO_PDF_HANDLER != null) alert("Exportar PDF", "PDF Baixado com sucesso, em C:\\Programing\\OS");
                 EXPORTAR_OS_PDF_HANDLER.exportar(orcSel, osSel);
