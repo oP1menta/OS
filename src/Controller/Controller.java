@@ -9,12 +9,15 @@ import BancoDeDados.UsuarioDAO;
 import PDF.GeradorPDFOrcamento;
 import PDF.GeradorPDFOS;
 
+import java.io.File;
+
 import Classe.*;
 import Exception.InvalidArgumentException;
 import Factory.Fac;
 import dominio.enums.StatusOrdemServico;
 import view.MainView;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -76,6 +79,10 @@ public class Controller {
         );
         MainView.setClientesProvider(() -> listarClientesPorNome(""));
 
+        // ── NOVOS: providers para a hierarquia na tela de Clientes ────────────
+        MainView.setEquipamentosPorClienteProvider(c -> listarEquipamentosPorCliente(c.getDocumento()));
+        MainView.setOrcamentosPorEquipamentoProvider(eq -> orcamentoDAO.listarPorEquipamento(eq.getId()));
+
         MainView.setSalvarEquipamentoHandler((nome, modelo, documentoCliente) ->
             cadastrarEquipamento(nome, modelo, documentoCliente)
         );
@@ -87,9 +94,9 @@ public class Controller {
         MainView.setDeletarEquipamentoHandler(id -> deletarEquipamento(id));
         MainView.setDeletarTecnicoHandler(id -> deletarTecnico(id));
 
-        MainView.setExportarOsPdfHandler((orc, ord) -> gerarPdfOS(orc, ord));
-        MainView.setExportarOrcamentoPdfHandler(orc -> gerarPdfOrcamento(orc));
-    }
+        MainView.setExportarOrcamentoPdfHandler((orc, destino) -> gerarPdfOrcamento(orc, destino));
+        MainView.setExportarOsPdfHandler((orc, ord, destino) -> gerarPdfOS(orc, ord, destino));
+        }
 
     private void inicializarUsuarios() {
         if (usuarioDAO.buscarPorLogin(USUARIO_COMUM) == null)
@@ -271,27 +278,43 @@ public class Controller {
 
     // ─── PDF ───────────────────────────────────────────────────────────────────
 
-    public void gerarPdfOS(Orçamento orc, OrdemDeServico os) {
-        if (os == null)
+    public void gerarPdfOS(Orçamento orc, OrdemDeServico os, File destino) {
+        if (os == null) {
             throw new IllegalArgumentException("OS não encontrada");
-        if (os.getEquipamento() == null)
+        }
+
+        if (os.getEquipamento() == null) {
             throw new IllegalArgumentException("A OS não possui equipamento vinculado");
+        }
+
+        if (destino == null) {
+            throw new IllegalArgumentException("Local de salvamento inválido");
+        }
 
         String documentoCliente = os.getEquipamento().getDocumentoCliente();
-        if (documentoCliente == null || documentoCliente.isBlank())
+
+        if (documentoCliente == null || documentoCliente.isBlank()) {
             throw new IllegalArgumentException("O equipamento não possui documento do cliente");
+        }
 
         Cliente cliente = clienteDAO.buscarPorDocumento(documentoCliente);
-        if (cliente == null)
+
+        if (cliente == null) {
             throw new IllegalArgumentException("Cliente não encontrado para o documento: " + documentoCliente);
+        }
 
-        GeradorPDFOS.gerarOS(orc, os, cliente);
+        GeradorPDFOS.gerarOS(orc, os, cliente, destino);
     }
-
-    public void gerarPdfOrcamento(Orçamento orcamento) {
-        if (orcamento == null)
+    public void gerarPdfOrcamento(Orçamento orc, File destino) {
+        if (orc == null) {
             throw new IllegalArgumentException("Orçamento inválido");
-        GeradorPDFOrcamento.gerarOrcamento(orcamento);
+        }
+
+        if (destino == null) {
+            throw new IllegalArgumentException("Local de salvamento inválido");
+        }
+
+        GeradorPDFOrcamento.gerarOrcamento(orc, destino);
     }
 
     public void deletarTecnico(int id) throws SQLException {
