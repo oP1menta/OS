@@ -285,7 +285,6 @@ public class OrdemDeServicoDAO {
         return lista;
     }
 
-    // ─── Helpers privados ──────────────────────────────────────────────────────
 
     private OrdemDeServico mapear(ResultSet rs, Equipamento equipamento, Connection conn) throws SQLException {
 
@@ -325,8 +324,7 @@ public class OrdemDeServicoDAO {
         BigDecimal valorMaoDeObra = rs.getBigDecimal("valor_mao_de_obra");
         if (valorMaoDeObra == null) valorMaoDeObra = BigDecimal.ZERO;
 
-        // Placeholder para passar a validação do construtor;
-        // os itens reais são carregados logo abaixo via setItens()
+        
         List<ItemOrcamento> placeholder = new ArrayList<>();
         placeholder.add(new ItemOrcamento("carregando", BigDecimal.ONE));
 
@@ -344,7 +342,7 @@ public class OrdemDeServicoDAO {
         orc.setObservacoes(rs.getString("observacoes"));
         orc.setMão_de_obra(valorMaoDeObra);
 
-        // Carrega os itens reais reutilizando a conexão já aberta
+       
         orc.setItens(buscarItensPorOrcamentoId(conn, (int) orcId));
 
         return orc;
